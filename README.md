@@ -138,3 +138,18 @@ LocalScrape stores all configuration and scraped contents in standard files unde
 - `POST /api/failed/retry` — Retry failed scrape jobs.
 - `GET /api/search?q={query}` — Full-text search over Markdown library.
 - `GET /api/export/{tag}` — Download a zip of all articles under a tag.
+
+---
+
+## 🔍 Troubleshooting
+
+### 🔴 Permission Denied on `downloads/` (Docker Volume)
+**Symptoms:** The container crashes and loops with exit status `1` (check `docker logs localscrape`). You might see an error like `PermissionError: [Errno 13] Permission denied: '/app/downloads/app.log'` or `/app/downloads/feeds.json`.
+
+**Cause:** The application inside the Docker container runs securely as a non-root user (`appuser` with UID `1001`). When Docker mounts `./downloads` from the host, the files might be owned by your host user (e.g. UID `1000`), preventing the container from writing to them.
+
+**Solution:** Run the following command on your Docker host machine to assign ownership of the mapped folder to UID `1001`, then restart:
+```bash
+sudo chown -R 1001:1001 ./downloads
+docker compose restart
+```
