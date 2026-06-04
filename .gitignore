@@ -1,0 +1,9 @@
+downloads/
+feeds.json
+failed.json
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+.venv/
+venv/

@@ -1,0 +1,47 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — LocalScrape
+#
+# Usage:
+#   docker compose up -d          # build & start in background
+#   docker compose logs -f        # follow logs
+#   docker compose down           # stop & remove containers
+#
+# The API is reachable at http://localhost:8603 on the host.
+# Scraped articles are persisted in ./downloads on the host machine.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  localscrape:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    image: localscrape:latest
+
+    container_name: localscrape
+
+    # Map host port 8603 → container port 8000
+    ports:
+      - "8603:8000"
+
+    # Restart the container automatically unless explicitly stopped
+    restart: unless-stopped
+
+    # Persist the downloads/ folder on the host so data survives container rebuilds
+    volumes:
+      - ./downloads:/app/downloads
+
+    # Lightweight health-check: curl the queue endpoint every 30 s
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/queue')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    environment:
+      # Force UTF-8 output in the container's Python process
+      - PYTHONIOENCODING=utf-8
+      # Disable Python output buffering so logs appear immediately
+      - PYTHONUNBUFFERED=1

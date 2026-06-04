@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalScrape Dashboard</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    <!-- Splash / Start Page -->
+    <div id="splash-screen" class="splash-overlay">
+        <div class="splash-bg-glow splash-glow-1"></div>
+        <div class="splash-bg-glow splash-glow-2"></div>
+        <div class="splash-bg-glow splash-glow-3"></div>
+        <div class="splash-content">
+            <img src="/static/logo.png" alt="LocalScrape Logo" class="splash-logo" />
+            <p class="splash-tagline">Clean Data &nbsp;|&nbsp; Offline Reads</p>
+            <button id="splash-enter-btn" class="splash-btn">
+                Let's Go!
+                <span class="splash-btn-arrow">→</span>
+            </button>
+            <span class="splash-version">v1.3.3</span>
+        </div>
+    </div>
+
+    <div class="app-layout hidden" id="app-layout">
+        <!-- Mobile Sidebar Backdrop -->
+        <div id="sidebar-backdrop" class="sidebar-backdrop hidden"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>LocalScrape <span class="version">v1.3.3</span></h2>
+            </div>
+            <div class="sidebar-content">
+                <h3>Management</h3>
+                <div class="sidebar-menu">
+                    <button id="nav-dashboard-btn" class="nav-btn active">Dashboard</button>
+                    <button id="nav-rss-btn" class="nav-btn">RSS Feeds</button>
+                    <button id="nav-failed-btn" class="nav-btn">Failed Jobs</button>
+                    <button id="nav-logs-btn" class="nav-btn">Logs</button>
+                    <button id="nav-info-btn" class="nav-btn">Info Guide</button>
+                </div>
+                <h3>Your Library</h3>
+                <ul id="tags-list" class="tags-list">
+                    <!-- Tags and articles populated here by JS -->
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Sidebar Resizer -->
+        <div id="sidebar-resizer" class="sidebar-resizer">
+            <div class="resizer-handle"></div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar/Banner -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+                    <div id="queue-status" class="queue-badge hidden">
+                        <span class="status-dot"></span>
+                        <span id="queue-text">Queue: 0 items</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div id="reader-controls" class="reader-controls hidden">
+                        <label for="font-size-slider">Aa</label>
+                        <input type="range" id="font-size-slider" min="0.8" max="2.0" step="0.1" value="1.0">
+                    </div>
+                    <div id="storage-badge" class="storage-badge" title="Total library size">
+                        <span class="storage-icon">💾</span>
+                        <span id="storage-text">--</span>
+                    </div>
+                    <button id="theme-toggle" class="theme-toggle-btn">
+                        <!-- Default icon: moon -->
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-scrollable">
+                <!-- Control Card (Scraping Form) -->
+                <section class="control-card" id="control-card">
+                    <div class="card-header">
+                        <h2>Add Articles</h2>
+                        <p>Paste URLs (one per line) and assign a tag.</p>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="urls-input" placeholder="https://example.com/article1&#10;https://example.com/article2" rows="4"></textarea>
+                        <div class="input-row">
+                            <input type="text" id="tag-input" list="tag-datalist" placeholder="e.g., tech, news, research">
+                            <datalist id="tag-datalist"></datalist>
+                            <button id="scrape-btn" class="btn primary-btn">Scrape</button>
+                        </div>
+                        <div id="scrape-message" class="message hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Reader View -->
+                <section id="reader-view" class="reader-view hidden">
+                    <div class="reader-header-bar">
+                        <button id="close-reader-btn" class="btn secondary-btn close-btn">← Back</button>
+                        <button id="rename-article-btn" class="btn secondary-btn action-btn">✏️ Rename</button>
+                        <button id="delete-article-btn" class="btn danger-btn action-btn">🗑️ Delete</button>
+                    </div>
+                    <div id="markdown-content" class="markdown-body">
+                        <!-- Markdown content injected here -->
+                    </div>
+                    <div id="end-of-article" class="end-of-article hidden">
+                        <div class="end-of-article-inner">
+                            <p>Finished reading?</p>
+                            <button id="end-delete-btn" class="btn danger-btn">🗑️ Delete this article</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Logs View -->
+                <section id="logs-view" class="logs-view hidden">
+                    <div class="card-header">
+                        <h2>System Logs</h2>
+                        <button id="refresh-logs-btn" class="btn secondary-btn">Refresh</button>
+                    </div>
+                    <div class="card-body">
+                        <pre id="logs-content" class="terminal-logs">Loading logs...</pre>
+                    </div>
+                </section>
+
+                <!-- RSS Feeds View -->
+                <section id="rss-view" class="control-card hidden">
+                    <div class="card-header">
+                        <h2>RSS Feeds</h2>
+                        <p>Automatically scrape articles every 2 hours from RSS/Atom feeds.</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="rss-form" style="display:flex; flex-direction:column; gap:1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                            <input type="text" id="rss-url-input" placeholder="https://example.com/rss.xml">
+                            <div class="input-row">
+                                <input type="text" id="rss-tag-input" list="tag-datalist" placeholder="Tag (e.g. news)">
+                                <input type="text" id="rss-keywords-input" placeholder="Keywords (comma separated)">
+                                <button id="add-rss-btn" class="btn primary-btn" style="white-space:nowrap;">Add Feed</button>
+                            </div>
+                        </div>
+                        
+                        <div id="rss-list-container" style="margin-top: 1rem;">
+                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">Active Feeds</p>
+                            <ul id="rss-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem;">
+                                <!-- RSS feeds injected via JS -->
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Failed Jobs View -->
+                <section id="failed-jobs-view" class="control-card hidden">
+                    <div class="card-header">
+                        <h2>Failed Jobs</h2>
+                        <p>Review and retry failed scrapes. URLs that fail 3 times are permanently marked.</p>
+                    </div>
+                    <div class="card-body">
+                        <ul id="failed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem;">
+                            <!-- Failed jobs injected via JS -->
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Empty State View -->
+                <section id="empty-state-view" class="empty-state-view hidden">
+                    <div class="empty-state-content">
+                        <div class="empty-icon">📰</div>
+                        <h2>It's quiet in here...</h2>
+                        <p>This tag has no articles yet. Head over to the Dashboard to scrape some URLs!</p>
+                        <button id="empty-state-dashboard-btn" class="btn primary-btn">Go to Dashboard</button>
+                    </div>
+                </section>
+
+                <!-- Info View -->
+                <section id="info-view" class="info-view hidden">
+                    <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h2>Information & Guide</h2>
+                    </div>
+                    <div class="tab-bar">
+                        <button class="tab-btn active" data-tab="help-docs">Help & Docs</button>
+                        <button class="tab-btn" data-tab="changelog">Changelog</button>
+                        <button class="tab-btn" data-tab="architecture">Architecture</button>
+                        <button class="tab-btn" data-tab="data-flows">Data Flows & API</button>
+                        <button class="tab-btn" data-tab="constraints">Constraints</button>
+                    </div>
+                    
+                    <div class="card-body markdown-body">
+                        <!-- Help & Docs Tab -->
+                        <div id="tab-help-docs" class="tab-content">
+                            <h3>How to use LocalScrape</h3>
+                            <p><strong>1. Scraping URLs:</strong> On the Dashboard, paste one or more URLs into the text area. Select an existing tag from the dropdown, or type a new tag name. Click "Scrape" — articles are processed in the background and will appear under your chosen tag.</p>
+                            
+                            <h4 style="margin-top:1.25rem;">📡 RSS Feeds — Step by Step</h4>
+                            <ol style="padding-left:1.5rem; line-height:1.8;">
+                                <li>Go to <strong>RSS Feeds</strong> in the sidebar.</li>
+                                <li>Paste an RSS/Atom feed URL (e.g. <code>https://techcrunch.com/feed/</code>).</li>
+                                <li>Assign a <strong>Tag</strong> — this is the folder articles will be saved to.</li>
+                                <li><strong>Keywords</strong> (optional, comma-separated) — only articles whose title or summary contains <em>any</em> of these words will be scraped. Leave blank to pull <em>everything</em> in the feed.</li>
+                                <li>Click <strong>"Add Feed"</strong> to save it.</li>
+                                <li>Click <strong>"Fetch Now"</strong> to immediately pull articles, or wait for the automatic 2-hour polling cycle.</li>
+                            </ol>
+                            <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
+                                <strong>💡 How many articles will it pull?</strong><br>
+                                RSS feeds typically contain only the <strong>10–50 most recent</strong> articles published by a website — not their entire catalogue. On your first "Fetch Now", you may get up to ~50 articles (depending on the site). After that, subsequent fetches will only pull <em>brand-new</em> articles that weren't there before. LocalScrape automatically skips articles it has already downloaded.<br><br>
+                                <strong>💡 Automated Cleanup</strong><br>
+                                To prevent your storage from filling up with thousands of unread articles, a background cleanup job automatically deletes RSS articles that are older than <strong>5 days</strong>.<br><br>
+                                <strong>💡 What if I leave keywords blank?</strong><br>
+                                Every article in the feed will be scraped. Use keywords to filter only what you care about (e.g. <code>AI, machine learning</code> will only scrape articles mentioning either term).
+                            </div>
+                            
+                            <p><strong>3. Viewing:</strong> Click on a tag in the Your Library sidebar to expand it. Click on an article to open the Reader View. Use the top bar to adjust text size or instantly return to the dashboard.</p>
+                            <p><strong>4. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading.</p>
+                            <p><strong>5. Storage:</strong> The 💾 counter in the top-right header shows total library size so you can keep an eye on disk usage.</p>
+                        </div>
+                        
+                        <!-- Changelog Tab -->
+                        <div id="tab-changelog" class="tab-content hidden">
+                            <h3>Changelog</h3>
+                            <h4>v1.3.3</h4>
+                            <ul>
+                                <li><strong>Automated Maintenance:</strong> Added a background cleanup job that automatically deletes RSS articles older than 5 days.</li>
+                            </ul>
+                            <h4>v1.3.2</h4>
+                            <ul>
+                                <li><strong>UI Enhancement:</strong> The left-hand sidebar is now draggable/resizable so you can read long article headings. Width is saved across sessions.</li>
+                                <li><strong>Bug Fix:</strong> Fixed a `NameError` crash in the system stats endpoint that was causing the storage badge to display `--`.</li>
+                            </ul>
+                            <h4>v1.3.1</h4>
+                            <ul>
+                                <li><strong>Splash Screen:</strong> Added a branded start page with animated neon glow effects and a "Let's Go!" entry button.</li>
+                            </ul>
+                            </ul>
+                            <h4>v1.3.0</h4>
+                            <ul>
+                                <li><strong>Fetch Now:</strong> Manually trigger an RSS feed pull instead of waiting for the 2-hour cycle.</li>
+                                <li><strong>Delete After Reading:</strong> A "Delete this article" prompt appears when you scroll to the bottom of the reader.</li>
+                                <li><strong>Storage Counter:</strong> Live 💾 indicator in the header showing total library disk usage.</li>
+                                <li><strong>Failed Jobs UI:</strong> Fully interactive view to review, retry, or dismiss failed scrapes.</li>
+                                <li><strong>Improved RSS Docs:</strong> Step-by-step instructions and keyword guidance in the Help tab.</li>
+                            </ul>
+                            <h4>v1.2.0 (Beta Polish)</h4>
+                            <ul>
+                                <li><strong>RSS Feeds:</strong> Automated polling every 2 hours with keyword matching.</li>
+                                <li><strong>Failed Jobs Vault:</strong> Review rejected URLs and retry them (3-strike logic).</li>
+                                <li><strong>Full-Text Search API:</strong> Search your entire local library via <code>/api/search</code>.</li>
+                                <li><strong>Cookie Injector:</strong> Save domain cookies for paywall bypassing.</li>
+                                <li><strong>UI Overhaul:</strong> New tabbed info page, empty states, and toast notifications.</li>
+                            </ul>
+                            <h4>v1.1.0</h4>
+                            <ul>
+                                <li><strong>Playwright Fallback:</strong> Headless Chromium integration for JS-heavy sites.</li>
+                                <li><strong>Referer Spoofing:</strong> Bypass soft paywalls pretending to be Google/Twitter.</li>
+                                <li><strong>Metrics:</strong> YAML front-matter with reading time and word count.</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Architecture Tab -->
+                        <div id="tab-architecture" class="tab-content hidden">
+                            <h3>Architecture</h3>
+                            <p><strong>Frontend:</strong> A purely framework-free Single Page Application built with Vanilla HTML, CSS, and JS. It uses <code>marked.js</code> for rendering Markdown.</p>
+                            <p><strong>Backend API:</strong> Built with Python and <code>FastAPI</code>. It provides RESTful endpoints for queuing scrapes, checking status, and managing files (CRUD operations on the downloads directory).</p>
+                            <p><strong>Scraping Pipeline (4-Stage Fallback):</strong>
+                                <br>1. Check cached version on <code>archive.md</code>.
+                                <br>2. Fallback to Accelerated Mobile Pages (AMP) via <code>?amp</code>.
+                                <br>3. Fallback to direct fetch with spoofed Referer headers.
+                                <br>4. Final fallback: Playwright headless Chromium (images/fonts blocked for speed).
+                            </p>
+                        </div>
+                        
+                        <!-- Data Flows & API Tab -->
+                        <div id="tab-data-flows" class="tab-content hidden">
+                            <h3>Data Flows</h3>
+                            <p><strong>Queue System:</strong> An <code>asyncio.Queue</code> manages background jobs sequentially to avoid rate-limiting. Status is tracked via the <code>/api/queue</code> endpoint.</p>
+                            <p><strong>Persistence:</strong> The app enforces a strict "no database" rule. All data lives in the local filesystem inside the <code>downloads/</code> folder:</p>
+                            <ul>
+                                <li><code>tags/</code>: Folders containing <code>.md</code> markdown articles.</li>
+                                <li><code>feeds.json</code>: RSS feed configurations.</li>
+                                <li><code>failed.json</code>: Vault of failed scrape attempts (max 3 strikes).</li>
+                                <li><code>cookies.json</code>: Domain-specific Netscape cookies.</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Constraints Tab -->
+                        <div id="tab-constraints" class="tab-content hidden">
+                            <h3>Constraints & Limitations</h3>
+                            <ul>
+                                <li><strong>Full-Text Search:</strong> Performed via linear filesystem scanning. Not suitable for corpuses >10,000 articles (requires migrating to a TF-IDF index).</li>
+                                <li><strong>Storage:</strong> Images are not downloaded locally; articles rely on hot-linking to original image URLs.</li>
+                                <li><strong>Browser:</strong> The bundled Playwright Chromium instance adds ~400MB to the Docker container size.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
