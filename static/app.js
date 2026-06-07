@@ -114,6 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const endOfArticle = document.getElementById('end-of-article');
     const endDeleteBtn = document.getElementById('end-delete-btn');
     const downloadArticleBtn = document.getElementById('download-article-btn');
+    const focusModeBtn = document.getElementById('focus-mode-btn');
+    const ttsListenBtn = document.getElementById('tts-listen-btn');
+    const favoriteArticleBtn = document.getElementById('favorite-article-btn');
+    const navBackupBtn = document.getElementById('nav-backup-btn');
     
     const librarySearch = document.getElementById('library-search');
     const tagSearch = document.getElementById('tag-search');
@@ -128,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentArticleTag = null;
     let currentArticleFilename = null;
     let currentArticleRaw = null;
+    let favoritesList = [];
+    let isSpeaking = false;
+    let isFocusMode = false;
 
     // --- State ---
     let pollInterval = null;
@@ -198,6 +205,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     themeToggleBtn.addEventListener('click', toggleTheme);
     initTheme();
+    
+    async function loadFavorites() {
+        try {
+            const res = await fetch('/api/favorites');
+            const data = await res.json();
+            favoritesList = data.favorites || [];
+        } catch (err) {
+            console.error('Failed to load favorites', err);
+        }
+    }
+    
+    async function openFavoritesView() {
+        switchView('tag-articles');
+        tagArticlesTitle.textContent = `★ Favorites`;
+        tagArticlesList.innerHTML = '';
+        
+        if (favoritesList.length === 0) {
+            tagArticlesList.innerHTML = `
+                <div class="library-empty">
+                    <div class="empty-icon">★</div>
+                    <h3>No favorites yet</h3>
+                    <p>Star some articles to see them here.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        favoritesList.forEach(path => {
+            const parts = path.split('/');
+            if (parts.length !== 2) return;
+            const tag = parts[0];
+            const filename = parts[1];
+            
+            const card = document.createElement('div');
+            card.className = 'article-card';
+            card.innerHTML = `
+                <div class="article-card-icon">★</div>
+                <div style="display:flex; flex-direction:column; justify-content:center;">
+                    <div class="article-card-name">${filename.replace('.md', '')}</div>
+                    <span class="article-date">${tag}</span>
+                </div>
+            `;
+            card.addEventListener('click', () => openArticle(tag, filename));
+            tagArticlesList.appendChild(card);
+        });
+    }
 
     // --- Sidebar & Data Loading ---
     async function loadTags() {
@@ -213,11 +266,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTags(tags) {
         tagsList.innerHTML = '';
         tagDatalist.innerHTML = '';
-
-        if (tags.length === 0) {
-            tagsList.innerHTML = '<li class="tag-item"><span class="tag-header">No tags found</span></li>';
-            return;
-        }
+        
+        // Ensure "Favorites" virtual tile is present
+        const favTile = document.createElement('div');
+        favTile.className = 'tag-tile';
+        favTile.innerHTML = `
+            <div class="tag-tile-icon">★</div>
+            <div class="tag-tile-name">Favorites</div>
+            <div class="tag-tile-count">${favoritesList.length} articles</div>
+        `;
+        favTile.addEventListener('click', openFavoritesView);
+        libraryTiles.appendChild(favTile);
 
         tags.forEach(tag => {
             const option = document.createElement('option');
@@ -539,6 +598,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentArticleRaw = markdownText;
             
             const { meta, body } = stripFrontMatter(markdownText);
+            
+            // Check favorites
+            const path = tag + '/' + filename;
+            if (favoritesList.includes(path)) {
+                favoriteArticleBtn.style.color = 'gold';
+            } else {
+                favoriteArticleBtn.style.color = '';
+            }
             
             // Build an optional metadata bar if front-matter exists
             let metaHtml = '';
@@ -952,6 +1019,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/system/stats?t=' + Date.now(), { cache: 'no-store' });
             const data = await res.json();
             storageText.textContent = data.total_size_human;
+            
+            // Storage Warning Threshold (> 500MB)
+            const storageBadge = document.getElementById('storage-badge');
+            if (data.total_size_bytes > 500 * 1024 * 1024) {
+                storageBadge.style.color = 'var(--error-text)';
+                storageBadge.style.backgroundColor = 'var(--error-bg)';
+            } else {
+                storageBadge.style.color = '';
+                storageBadge.style.backgroundColor = '';
+            }
         } catch (err) {
             storageText.textContent = '--';
         }
@@ -1068,9 +1145,91 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (focusModeBtn) {
+        focusModeBtn.addEventListener('click', () => {
+            isFocusMode = !isFocusMode;
+            if (isFocusMode) {
+                document.body.classList.add('focus-mode');
+                focusModeBtn.style.color = 'var(--accent-color)';
+            } else {
+                document.body.classList.remove('focus-mode');
+                focusModeBtn.style.color = '';
+            }
+        });
+    }
+    
+    if (ttsListenBtn) {
+        ttsListenBtn.addEventListener('click', () => {
+            if (isSpeaking) {
+                window.speechSynthesis.cancel();
+                isSpeaking = false;
+                ttsListenBtn.textContent = '🎧 Listen';
+                ttsListenBtn.style.color = '';
+            } else {
+                if (!markdownContent.innerText) return;
+                const utterance = new SpeechSynthesisUtterance(markdownContent.innerText);
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    ttsListenBtn.textContent = '🎧 Listen';
+                    ttsListenBtn.style.color = '';
+                };
+                window.speechSynthesis.speak(utterance);
+                isSpeaking = true;
+                ttsListenBtn.textContent = '⏹ Stop';
+                ttsListenBtn.style.color = 'var(--error-text)';
+            }
+        });
+    }
+    
+    if (navBackupBtn) {
+        navBackupBtn.addEventListener('click', () => {
+            showToast('Generating backup zip...');
+            window.location.href = '/api/backup';
+        });
+    }
+
+    if (favoriteArticleBtn) {
+        favoriteArticleBtn.addEventListener('click', async () => {
+            if (!currentArticleTag || !currentArticleFilename) return;
+            const path = currentArticleTag + '/' + currentArticleFilename;
+            const isFav = favoritesList.includes(path);
+            
+            try {
+                const res = await fetch('/api/favorites', {
+                    method: isFav ? 'DELETE' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    favoritesList = data.favorites;
+                    if (!isFav) {
+                        favoriteArticleBtn.style.color = 'gold';
+                        showToast('Added to favorites');
+                    } else {
+                        favoriteArticleBtn.style.color = '';
+                        showToast('Removed from favorites');
+                    }
+                    loadTags(); // refresh count
+                }
+            } catch (err) {}
+        });
+    }
+
+    // --- Service Worker ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/sw.js').catch(err => {
+                console.log('SW registration failed: ', err);
+            });
+        });
+    }
+
     // --- Initialization ---
     switchView('library');
-    loadTags();
+    loadFavorites().then(() => {
+        loadTags();
+    });
     loadStorage();
     checkQueue(); // Check if anything is pending on initial load
 });

@@ -45,6 +45,8 @@ import os
 import threading
 import time
 import zipfile
+import tempfile
+import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -77,6 +79,7 @@ BASE.mkdir(parents=True, exist_ok=True)
 FEEDS_FILE = BASE / "feeds.json"
 FAILED_FILE = BASE / "failed.json"
 COOKIES_FILE = BASE / "cookies.json"
+FAVORITES_FILE = BASE / "favorites.json"
 MAX_ATTEMPTS = 3  # URL is permanently failed after this many total attempts
 
 # ---------------------------------------------------------------------------
@@ -346,11 +349,13 @@ app = FastAPI(
 
 class ScrapeRequest(BaseModel):
     urls: list[HttpUrl]
-    tag: str
+    tag: str = ""
 
     @field_validator("tag")
     @classmethod
     def validate_tag(cls, v: str) -> str:
+        if not v.strip():
+            return "_auto_"
         slug = slugify(v.strip())
         if not slug:
             raise ValueError("tag must not be empty after slugification.")
@@ -472,6 +477,65 @@ async def enqueue_scrape(body: ScrapeRequest) -> ScrapeResponse:
 @app.get("/api/queue", response_model=QueueResponse)
 async def queue_status() -> QueueResponse:
     return QueueResponse(remaining=_queue.qsize())
+
+
+class FavoriteRequest(BaseModel):
+    path: str
+
+@app.get("/api/favorites")
+async def get_favorites():
+    if not FAVORITES_FILE.exists():
+        return {"favorites": []}
+    try:
+        with open(FAVORITES_FILE, "r", encoding="utf-8") as f:
+            return {"favorites": json.load(f)}
+    except:
+        return {"favorites": []}
+
+@app.post("/api/favorites")
+async def add_favorite(body: FavoriteRequest):
+    favs = []
+    if FAVORITES_FILE.exists():
+        try:
+            with open(FAVORITES_FILE, "r", encoding="utf-8") as f:
+                favs = json.load(f)
+        except:
+            pass
+    if body.path not in favs:
+        favs.append(body.path)
+        with open(FAVORITES_FILE, "w", encoding="utf-8") as f:
+            json.dump(favs, f)
+    return {"status": "ok", "favorites": favs}
+
+@app.delete("/api/favorites")
+async def remove_favorite(body: FavoriteRequest):
+    favs = []
+    if FAVORITES_FILE.exists():
+        try:
+            with open(FAVORITES_FILE, "r", encoding="utf-8") as f:
+                favs = json.load(f)
+        except:
+            pass
+    if body.path in favs:
+        favs.remove(body.path)
+        with open(FAVORITES_FILE, "w", encoding="utf-8") as f:
+            json.dump(favs, f)
+    return {"status": "ok", "favorites": favs}
+
+
+@app.get("/api/backup")
+async def backup_data():
+    """Zips the downloads/ directory and returns it as a file."""
+    # Create temp zip
+    tmp_dir = tempfile.gettempdir()
+    zip_path = os.path.join(tmp_dir, f"localscrape_backup_{int(time.time())}")
+    shutil.make_archive(zip_path, 'zip', BASE)
+    zip_file = zip_path + ".zip"
+    return FileResponse(
+        path=zip_file,
+        media_type="application/zip",
+        filename=f"localscrape_backup_{datetime.now().strftime('%Y%m%d')}.zip"
+    )
 
 
 @app.get("/api/tags", response_model=TagsResponse)

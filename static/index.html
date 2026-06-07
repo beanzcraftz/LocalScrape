@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/static/manifest.json">
     
     <!-- marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -58,6 +59,7 @@
                     <button id="nav-failed-btn" class="nav-btn">Failed Jobs</button>
                     <button id="nav-logs-btn" class="nav-btn">Logs</button>
                     <button id="nav-info-btn" class="nav-btn">Info Guide</button>
+                    <button id="nav-backup-btn" class="nav-btn">Backup Data</button>
                 </div>
                 <h3>Your Library</h3>
                 <ul id="tags-list" class="tags-list">
@@ -144,6 +146,9 @@
                 <section id="reader-view" class="reader-view hidden">
                     <div class="reader-header-bar">
                         <button id="close-reader-btn" class="btn secondary-btn close-btn">← Back</button>
+                        <button id="focus-mode-btn" class="btn secondary-btn action-btn">👓 Focus</button>
+                        <button id="tts-listen-btn" class="btn secondary-btn action-btn">🎧 Listen</button>
+                        <button id="favorite-article-btn" class="btn secondary-btn action-btn">★ Favorite</button>
                         <button id="download-article-btn" class="btn secondary-btn action-btn">⬇️ Download</button>
                         <button id="rename-article-btn" class="btn secondary-btn action-btn">✏️ Rename</button>
                         <button id="delete-article-btn" class="btn danger-btn action-btn">🗑️ Delete</button>
@@ -236,6 +241,9 @@
                         <div id="tab-help-docs" class="tab-content">
                             <h3>How to use LocalScrape</h3>
                             <p><strong>1. Scraping URLs:</strong> On the Dashboard, paste one or more URLs into the text area. Select an existing tag from the dropdown, or type a new tag name. Click "Scrape" — articles are processed in the background and will appear under your chosen tag.</p>
+                            <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
+                                <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
+                            </div>
                             
                             <h4 style="margin-top:1.25rem;">📡 RSS Feeds — Step by Step</h4>
                             <ol style="padding-left:1.5rem; line-height:1.8;">
@@ -255,9 +263,10 @@
                                 Every article in the feed will be scraped. Use keywords to filter only what you care about (e.g. <code>AI, machine learning</code> will only scrape articles mentioning either term).
                             </div>
                             
-                            <p><strong>3. Viewing:</strong> Click on a tag in the Your Library sidebar to expand it. Click on an article to open the Reader View. Use the top bar to adjust text size or instantly return to the dashboard.</p>
-                            <p><strong>4. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading.</p>
-                            <p><strong>5. Storage:</strong> The 💾 counter in the top-right header shows total library size so you can keep an eye on disk usage.</p>
+                            <p><strong>3. Viewing:</strong> Click on a tag in the Your Library sidebar to expand it. You can instantly filter articles using the Search Bar. Click on an article to open the Reader View. Use the top bar to adjust text size or toggle themes.</p>
+                            <p><strong>4. Reader Tools:</strong> Inside the Reader View, use the action buttons to <strong>👓 Focus</strong> (hide distractions), <strong>🎧 Listen</strong> (text-to-speech), or <strong>★ Favorite</strong> the article to pin it to your Dashboard. You can also export articles as Markdown using the <strong>⬇️ Download</strong> button, or hit `Ctrl+P` to save a clean PDF.</p>
+                            <p><strong>5. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading. You can also download a zip of your entire library using the <strong>Backup Data</strong> button in the sidebar.</p>
+                            <p><strong>6. Storage & Performance:</strong> The 💾 counter in the top-right header shows total library size. If it exceeds 500MB, it will turn red as a warning. As a Progressive Web App (PWA), you can also "Add to Homescreen" on mobile devices for a native app experience!</p>
                         </div>
                         
                         <!-- Changelog Tab -->
@@ -265,6 +274,15 @@
                             <h3>Changelog</h3>
                             <h4>v1.5.0</h4>
                             <ul>
+                                <li><strong>PWA Support:</strong> Install LocalScrape to your home screen with offline manifest support.</li>
+                                <li><strong>Zen Mode:</strong> Distraction-free reading with the '👓 Focus' toggle.</li>
+                                <li><strong>Text-to-Speech:</strong> Listen to articles using the '🎧 Listen' button via the Web Speech API.</li>
+                                <li><strong>Favorites:</strong> Star articles to collect them in a virtual 'Favorites' folder.</li>
+                                <li><strong>Smart Auto-Tagging:</strong> Blank tags fallback to automatically parsing keywords or 'uncategorized'.</li>
+                                <li><strong>One-Click Backup:</strong> Zip and download your entire library directly from the sidebar.</li>
+                                <li><strong>Print-to-PDF:</strong> Clean print formatting optimized for readability and paper saving.</li>
+                                <li><strong>Safari Optimizations:</strong> Eliminated bounce scrolling and improved mobile viewport layout.</li>
+                                <li><strong>Storage Warnings:</strong> The storage badge alerts you when the library exceeds 500MB.</li>
                                 <li><strong>Terminal Theme:</strong> Added a third "Hacker" theme to the switcher.</li>
                                 <li><strong>Instant Search:</strong> Find tags and articles quickly using the new search bars in the library views.</li>
                                 <li><strong>Reading Progress Bar:</strong> A fixed progress indicator appears when reading long articles.</li>
@@ -339,6 +357,7 @@
                                 <li><code>feeds.json</code>: RSS feed configurations.</li>
                                 <li><code>failed.json</code>: Vault of failed scrape attempts (max 3 strikes).</li>
                                 <li><code>cookies.json</code>: Domain-specific Netscape cookies.</li>
+                                <li><code>favorites.json</code>: Contains all Starred article paths.</li>
                             </ul>
                         </div>
                         

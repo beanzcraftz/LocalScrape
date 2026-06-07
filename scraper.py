@@ -533,10 +533,25 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def extract_auto_tag(html: str) -> str:
+    soup = BeautifulSoup(html, "html.parser")
+    # try keywords meta
+    meta_kw = soup.find("meta", attrs={"name": "keywords"})
+    if meta_kw and meta_kw.get("content"):
+        kw = meta_kw.get("content").split(",")[0].strip()
+        slug = slugify(kw)
+        if slug: return slug
+    # try property article:tag
+    meta_tag = soup.find("meta", property="article:tag")
+    if meta_tag and meta_tag.get("content"):
+        slug = slugify(meta_tag.get("content").strip())
+        if slug: return slug
+    return "uncategorized"
+
 def main() -> None:
     args = parse_args()
     url: str = args.url.strip()
-    tag: str = slugify(args.tag.strip())
+    tag: str = slugify(args.tag.strip()) if args.tag.strip() != "_auto_" else "_auto_"
 
     if not url.startswith(("http://", "https://")):
         print("[!] URL must start with http:// or https://")
@@ -544,6 +559,9 @@ def main() -> None:
 
     # 1. Fetch
     html, resolved_url = fetch_html(url)
+    
+    if tag == "_auto_":
+        tag = extract_auto_tag(html)
 
     # 2. Extract
     title, content_html = extract_article(html)

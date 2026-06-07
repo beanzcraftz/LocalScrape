@@ -223,13 +223,13 @@ body {
     background-color: var(--bg-main);
     color: var(--text-main);
     transition: var(--transition);
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
 .app-layout {
     display: flex;
-    height: 100vh;
+    height: 100dvh;
 }
 
 /* Sidebar */
@@ -1194,4 +1194,64 @@ textarea {
     font-size: 0.75rem;
     color: var(--text-muted);
     margin-top: 0.25rem;
+}
+
+/* ===== FOCUS / ZEN MODE ===== */
+.focus-mode .sidebar,
+.focus-mode .sidebar-resizer,
+.focus-mode .top-header,
+.focus-mode .reader-header-bar,
+.focus-mode .reading-progress {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+.focus-mode .sidebar {
+    width: 0 !important;
+    min-width: 0 !important;
+    border: none;
+}
+
+.focus-mode .main-content {
+    margin-left: 0;
+}
+
+.focus-mode .markdown-body {
+    max-width: 800px;
+    margin: 0 auto;
+    font-size: 1.1em;
+}
+
+/* ===== PRINT OPTIMIZATION ===== */
+@media print {
+    body {
+        height: auto !important;
+        overflow: visible !important;
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+    .sidebar,
+    .sidebar-resizer,
+    .top-header,
+    .reader-header-bar,
+    .reading-progress,
+    .splash-overlay,
+    .toast-container {
+        display: none !important;
+    }
+    .app-layout, .main-content, .content-scrollable, .reader-view {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+    .markdown-body {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    a {
+        text-decoration: underline;
+        color: #000;
+    }
 }
