@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.7.2
+### Bug Fixes
+- **Sidebar Navigation:** Fixed an issue where clicking a tag in the sidebar with 0 articles would force an empty state view, while clicking a tag with articles would only expand the sidebar accordion without updating the central view. Now, clicking any tag in the sidebar perfectly mirrors the behavior of clicking it in the Dashboard grid.
+
 ## v1.7.1
 ### Bug Fixes & Refinements
 - **Zen Mode Visibility:** Removed the `hidden` class from the Focus Mode floating controls that was preventing them from appearing.

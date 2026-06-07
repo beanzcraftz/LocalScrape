@@ -363,6 +363,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     articlesContainer.classList.add('open');
                     loadArticles(tag, articlesContainer);
                 }
+                
+                // Also load the tag in the central view to match dashboard behavior
+                openTagView(tag);
             });
 
             li.appendChild(header);
@@ -380,7 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = '';
             if (data.articles.length === 0) {
                 container.innerHTML = '<li class="article-item" style="pointer-events:none">No articles</li>';
-                switchView('empty-state');
                 return;
             }
 
