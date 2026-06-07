@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.5
+### Bug Fixes
+- **UI Initialization Crash:** Fixed a critical JavaScript ReferenceError caused by missing variables that prevented the sidebar, storage calculator, and dashboard library from loading properly.
+- **Favorites Tile Rendering:** Fixed a bug where the "Favorites" virtual tile would crash the dashboard rendering pipeline or fail to display alongside other tags.
+- **CPU Pegging:** Pushed Service Worker cache bust to properly deploy the CSS infinite animation fixes, permanently resolving the background Firefox CPU pegging issue.
+
 ## v1.6.0
 ### New Features
 - **Activity Monitor:** Consolidated the Failed Jobs and Logs views into a single dashboard.
