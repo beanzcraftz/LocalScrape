@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navBackupBtn = document.getElementById('nav-backup-btn');
     
     const exitFocusBtn = document.getElementById('exit-focus-btn');
-    const autoScrollBtn = document.getElementById('auto-scroll-btn');
+    const nextArticleBtn = document.getElementById('next-article-btn');
     
     const librarySearch = document.getElementById('library-search');
     const tagSearch = document.getElementById('tag-search');
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let favoritesList = [];
     let isSpeaking = false;
     let isFocusMode = false;
-    let autoScrollInterval = null;
+    let currentArticleQueue = [];
 
     // --- State ---
     let pollInterval = null;
@@ -237,6 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             return;
         }
+        
+        currentArticleQueue = favoritesList.map(path => {
+            const parts = path.split('/');
+            return parts.length === 2 ? { tag: parts[0], filename: parts[1] } : null;
+        }).filter(a => a !== null);
         
         favoritesList.forEach(path => {
             const parts = path.split('/');
@@ -556,6 +561,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 return;
             }
+            
+            currentArticleQueue = data.articles.map(a => ({ tag, filename: a.filename }));
             
             data.articles.forEach(article => {
                 const card = document.createElement('div');
@@ -1242,26 +1249,18 @@ document.addEventListener('DOMContentLoaded', () => {
             isFocusMode = false;
             document.body.classList.remove('focus-mode');
             focusModeBtn.style.color = '';
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
-                autoScrollInterval = null;
-                autoScrollBtn.style.color = '';
-            }
         });
     }
 
-    if (autoScrollBtn) {
-        autoScrollBtn.addEventListener('click', () => {
-            if (autoScrollInterval) {
-                clearInterval(autoScrollInterval);
-                autoScrollInterval = null;
-                autoScrollBtn.style.color = '';
+    if (nextArticleBtn) {
+        nextArticleBtn.addEventListener('click', () => {
+            if (!currentArticleQueue.length || !currentArticleFilename || !currentArticleTag) return;
+            const currentIndex = currentArticleQueue.findIndex(a => a.filename === currentArticleFilename && a.tag === currentArticleTag);
+            if (currentIndex >= 0 && currentIndex < currentArticleQueue.length - 1) {
+                const next = currentArticleQueue[currentIndex + 1];
+                openArticle(next.tag, next.filename);
             } else {
-                autoScrollBtn.style.color = 'var(--accent-color)';
-                const scrollable = document.querySelector('.content-scrollable');
-                autoScrollInterval = setInterval(() => {
-                    if (scrollable) scrollable.scrollBy({ top: 1, behavior: 'auto' });
-                }, 40);
+                showToast("You've reached the end of the list.");
             }
         });
     }
@@ -1271,6 +1270,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (ttsSpeed && ttsSpeedLabel) {
             ttsSpeed.addEventListener('input', () => {
                 ttsSpeedLabel.textContent = parseFloat(ttsSpeed.value).toFixed(1) + 'x';
+            });
+            ttsSpeed.addEventListener('change', () => {
+                if (isSpeaking) {
+                    showToast("Stop and Restart reading to apply new speed");
+                }
             });
         }
         

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.7.1
+### Bug Fixes & Refinements
+- **Zen Mode Visibility:** Removed the `hidden` class from the Focus Mode floating controls that was preventing them from appearing.
+- **Next Article Flow:** Replaced the Auto-Scroll button with a "Next Article" button that instantly loads the next article in your current folder queue for seamless reading.
+- **TTS Speed Clarification:** Added an automatic Toast notification to inform users that they must stop and restart the TTS engine to apply a new speed setting, due to browser API limitations.
+
+
 ## v1.7.0
 ### New Features & Improvements
 - **Text-to-Speech Speed Control:** Added a speed adjustment slider next to the TTS Listen button (0.5x to 2.0x).
