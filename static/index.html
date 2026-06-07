@@ -32,7 +32,7 @@
                 Let's Go!
                 <span class="splash-btn-arrow">→</span>
             </button>
-            <span class="splash-version">v1.5.0</span>
+            <span class="splash-version">v1.6.0</span>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.5.0</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.6.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
@@ -56,8 +56,7 @@
                 <div class="sidebar-menu">
                     <button id="nav-dashboard-btn" class="nav-btn">Add Articles/Links</button>
                     <button id="nav-rss-btn" class="nav-btn">RSS Feeds</button>
-                    <button id="nav-failed-btn" class="nav-btn">Failed Jobs</button>
-                    <button id="nav-logs-btn" class="nav-btn">Logs</button>
+                    <button id="nav-activity-btn" class="nav-btn">Activity Monitor</button>
                     <button id="nav-info-btn" class="nav-btn">Info Guide</button>
                     <button id="nav-backup-btn" class="nav-btn">Backup Data</button>
                 </div>
@@ -164,13 +163,27 @@
                     </div>
                 </section>
 
-                <!-- Logs View -->
-                <section id="logs-view" class="logs-view hidden">
-                    <div class="card-header">
-                        <h2>System Logs</h2>
-                        <button id="refresh-logs-btn" class="btn secondary-btn">Refresh</button>
+                <!-- Activity Monitor View -->
+                <section id="activity-monitor-view" class="control-card hidden">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2>Activity Monitor</h2>
+                            <p>Track 10-day history of completed and failed scrapes.</p>
+                        </div>
+                        <button id="refresh-activity-btn" class="btn secondary-btn">Refresh</button>
                     </div>
                     <div class="card-body">
+                        <h3>Failed Jobs</h3>
+                        <ul id="failed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem; margin-bottom: 2rem;">
+                            <!-- Failed jobs injected via JS -->
+                        </ul>
+                        
+                        <h3>Completed Jobs</h3>
+                        <ul id="completed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem; margin-bottom: 2rem;">
+                            <!-- Completed jobs injected via JS -->
+                        </ul>
+                        
+                        <h3>Active Logs</h3>
                         <pre id="logs-content" class="terminal-logs">Loading logs...</pre>
                     </div>
                 </section>
@@ -200,18 +213,7 @@
                     </div>
                 </section>
 
-                <!-- Failed Jobs View -->
-                <section id="failed-jobs-view" class="control-card hidden">
-                    <div class="card-header">
-                        <h2>Failed Jobs</h2>
-                        <p>Review and retry failed scrapes. URLs that fail 3 times are permanently marked.</p>
-                    </div>
-                    <div class="card-body">
-                        <ul id="failed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem;">
-                            <!-- Failed jobs injected via JS -->
-                        </ul>
-                    </div>
-                </section>
+
 
                 <!-- Empty State View -->
                 <section id="empty-state-view" class="empty-state-view hidden">
@@ -272,6 +274,12 @@
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog</h3>
+                            <h4>v1.6.0</h4>
+                            <ul>
+                                <li><strong>Activity Monitor:</strong> Consolidated the Failed Jobs and Logs views into a single dashboard.</li>
+                                <li><strong>Job History:</strong> Added tracking for successfully completed scrape jobs.</li>
+                                <li><strong>10-Day Retention:</strong> Implemented a background automated cleanup task to prune log files and job histories older than 10 days to save space.</li>
+                            </ul>
                             <h4>v1.5.0</h4>
                             <ul>
                                 <li><strong>PWA Support:</strong> Install LocalScrape to your home screen with offline manifest support.</li>

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.0
+### New Features
+- **Activity Monitor:** Consolidated the Failed Jobs and Logs views into a single dashboard.
+- **Job History:** Added tracking for successfully completed scrape jobs.
+- **10-Day Retention:** Implemented a background automated cleanup task to prune log files and job histories older than 10 days to save space.
+
 ## v1.5.0
 ### New Features
 - **PWA Support:** Install LocalScrape to your home screen with offline manifest and service worker support.

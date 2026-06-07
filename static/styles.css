@@ -31,7 +31,7 @@
     background: #00ff88;
     top: -15%;
     left: -10%;
-    animation: glowFloat1 6s ease-in-out infinite alternate;
+    animation: glowFloat1 6s ease-out forwards;
 }
 
 .splash-glow-2 {
@@ -40,7 +40,7 @@
     background: #3b82f6;
     bottom: -10%;
     right: -5%;
-    animation: glowFloat2 8s ease-in-out infinite alternate;
+    animation: glowFloat2 8s ease-out forwards;
 }
 
 .splash-glow-3 {
@@ -50,8 +50,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    opacity: 0.15;
-    animation: glowPulse 4s ease-in-out infinite;
+    opacity: 0.25;
+    animation: splashFadeIn 2s ease forwards;
 }
 
 @keyframes glowFloat1 {
@@ -88,8 +88,8 @@
     max-width: 480px;
     width: 85vw;
     height: auto;
-    filter: drop-shadow(0 0 30px rgba(0, 255, 136, 0.3)) drop-shadow(0 0 60px rgba(0, 255, 136, 0.1));
-    animation: logoGlow 3s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.25)) drop-shadow(0 0 50px rgba(0, 255, 136, 0.08));
+    animation: splashFadeIn 1.5s ease-out forwards;
 }
 
 @keyframes logoGlow {

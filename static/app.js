@@ -83,11 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLibraryBtn = document.getElementById('nav-library-btn');
     const navDashboardBtn = document.getElementById('nav-dashboard-btn');
     const navRssBtn = document.getElementById('nav-rss-btn');
-    const navFailedBtn = document.getElementById('nav-failed-btn');
-    const navLogsBtn = document.getElementById('nav-logs-btn');
+    const navActivityBtn = document.getElementById('nav-activity-btn');
     const navInfoBtn = document.getElementById('nav-info-btn');
     
-    const logsView = document.getElementById('logs-view');
+    const activityMonitorView = document.getElementById('activity-monitor-view');
     const infoView = document.getElementById('info-view');
     const rssView = document.getElementById('rss-view');
     const rssUrlInput = document.getElementById('rss-url-input');
@@ -96,8 +95,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addRssBtn = document.getElementById('add-rss-btn');
     const rssList = document.getElementById('rss-list');
     
-    const failedJobsView = document.getElementById('failed-jobs-view');
     const failedList = document.getElementById('failed-list');
+    const completedList = document.getElementById('completed-list');
     const emptyStateView = document.getElementById('empty-state-view');
     const libraryView = document.getElementById('library-view');
     const tagArticlesView = document.getElementById('tag-articles-view');
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tagArticlesList = document.getElementById('tag-articles-list');
     
     const emptyStateDashboardBtn = document.getElementById('empty-state-dashboard-btn');
-    const refreshLogsBtn = document.getElementById('refresh-logs-btn');
+    const refreshActivityBtn = document.getElementById('refresh-activity-btn');
     const logsContent = document.getElementById('logs-content');
     
     const renameArticleBtn = document.getElementById('rename-article-btn');
@@ -267,16 +266,16 @@ document.addEventListener('DOMContentLoaded', () => {
         tagsList.innerHTML = '';
         tagDatalist.innerHTML = '';
         
-        // Ensure "Favorites" virtual tile is present
-        const favTile = document.createElement('div');
-        favTile.className = 'tag-tile';
-        favTile.innerHTML = `
-            <div class="tag-tile-icon">★</div>
-            <div class="tag-tile-name">Favorites</div>
-            <div class="tag-tile-count">${favoritesList.length} articles</div>
+        // Add Favorites to sidebar
+        const favSidebar = document.createElement('li');
+        favSidebar.className = 'tag-item';
+        favSidebar.innerHTML = `
+            <div class="tag-header">
+                <span class="folder-icon" style="flex-grow:1; display:flex; align-items:center; color:gold;">★ Favorites</span>
+            </div>
         `;
-        favTile.addEventListener('click', openFavoritesView);
-        libraryTiles.appendChild(favTile);
+        favSidebar.addEventListener('click', openFavoritesView);
+        tagsList.appendChild(favSidebar);
 
         tags.forEach(tag => {
             const option = document.createElement('option');
@@ -412,10 +411,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         controlCard.classList.add('hidden');
         readerView.classList.add('hidden');
-        logsView.classList.add('hidden');
+        activityMonitorView.classList.add('hidden');
         infoView.classList.add('hidden');
         rssView.classList.add('hidden');
-        failedJobsView.classList.add('hidden');
         emptyStateView.classList.add('hidden');
         readerControls.classList.add('hidden');
         libraryView.classList.add('hidden');
@@ -437,14 +435,10 @@ document.addEventListener('DOMContentLoaded', () => {
             rssView.classList.remove('hidden');
             navRssBtn.classList.add('active');
             loadRssFeeds();
-        } else if (viewName === 'failed') {
-            failedJobsView.classList.remove('hidden');
-            navFailedBtn.classList.add('active');
-            loadFailedJobs();
-        } else if (viewName === 'logs') {
-            logsView.classList.remove('hidden');
-            navLogsBtn.classList.add('active');
-            loadLogs();
+        } else if (viewName === 'activity') {
+            activityMonitorView.classList.remove('hidden');
+            navActivityBtn.classList.add('active');
+            loadActivityMonitor();
         } else if (viewName === 'info') {
             infoView.classList.remove('hidden');
             navInfoBtn.classList.add('active');
@@ -465,8 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navLibraryBtn.addEventListener('click', () => switchView('library'));
     navDashboardBtn.addEventListener('click', () => switchView('dashboard'));
     navRssBtn.addEventListener('click', () => switchView('rss'));
-    navFailedBtn.addEventListener('click', () => switchView('failed'));
-    navLogsBtn.addEventListener('click', () => switchView('logs'));
+    navActivityBtn.addEventListener('click', () => switchView('activity'));
     navInfoBtn.addEventListener('click', () => switchView('info'));
     
     emptyStateDashboardBtn.addEventListener('click', () => switchView('library'));
@@ -482,7 +475,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tilesContainer.innerHTML = '';
             
-            if (data.tags.length === 0) {
+            // Render Favorites tile in Dashboard Grid
+            const favTile = document.createElement('div');
+            favTile.className = 'tag-tile';
+            favTile.innerHTML = `
+                <div class="tag-tile-icon" style="color:gold;">★</div>
+                <div class="tag-tile-name">Favorites</div>
+                <div class="tag-tile-count">${favoritesList.length} article${favoritesList.length !== 1 ? 's' : ''}</div>
+            `;
+            favTile.addEventListener('click', openFavoritesView);
+            tilesContainer.appendChild(favTile);
+            
+            if (data.tags.length === 0 && favoritesList.length === 0) {
                 tilesContainer.innerHTML = `
                     <div class="library-empty">
                         <div class="empty-icon">\ud83d\udced</div>
@@ -965,24 +969,166 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Logs ---
-    async function loadLogs() {
+    // --- Activity Monitor ---
+    async function loadActivityMonitor() {
+        failedList.innerHTML = '<li style="color:var(--text-muted)">Loading failed jobs...</li>';
+        completedList.innerHTML = '<li style="color:var(--text-muted)">Loading completed jobs...</li>';
         logsContent.textContent = 'Loading logs...';
+        
         try {
-            const res = await fetch('/api/logs');
-            const data = await res.json();
-            if (data.logs && data.logs.length > 0) {
-                logsContent.textContent = data.logs.join('');
+            // Load logs
+            const logRes = await fetch('/api/logs?t=' + Date.now(), { cache: 'no-store' });
+            const logData = await logRes.json();
+            if (logData.logs && logData.logs.length > 0) {
+                logsContent.textContent = logData.logs.join('');
             } else {
                 logsContent.textContent = 'No logs available.';
             }
             logsContent.scrollTop = logsContent.scrollHeight;
+            
+            // Load activity
+            const res = await fetch('/api/activity?t=' + Date.now(), { cache: 'no-store' });
+            const data = await res.json();
+            
+            failedList.innerHTML = '';
+            completedList.innerHTML = '';
+            
+            if (!data.failed || data.failed.length === 0) {
+                failedList.innerHTML = '<li style="color:var(--text-muted)">No failed jobs. 🎉</li>';
+            } else {
+                data.failed.forEach(item => {
+                    const li = document.createElement('li');
+                    li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg-main); border-radius:6px; border:1px solid var(--border-color);';
+                    
+                    const strikes = item.attempts || 0;
+                    const maxedOut = strikes >= 3;
+                    const strikeLabel = maxedOut 
+                        ? '<span style="color:#ff4444; font-weight:600;">⛔ 3/3 strikes</span>'
+                        : `<span style="color:var(--text-muted);">${strikes}/3 strikes</span>`;
+                    
+                    li.innerHTML = `
+                        <div style="display:flex; flex-direction:column; overflow:hidden; padding-right:1rem;">
+                            <strong style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0.25rem; font-size:0.9rem;">${item.url}</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">
+                                ${strikeLabel} · ${item.reason || 'Unknown error'}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap: 0.5rem; flex-shrink: 0;">
+                            <button class="btn ${maxedOut ? 'secondary-btn' : 'primary-btn'} retry-failed-btn" 
+                                data-url="${item.url}" 
+                                ${maxedOut ? 'disabled title="Max retries reached"' : ''}
+                                style="padding:0.4rem 0.8rem; font-size:0.8rem; white-space:nowrap;">
+                                ${maxedOut ? 'Max Retries' : 'Retry'}
+                            </button>
+                            <button class="btn danger-btn delete-failed-btn" data-url="${item.url}" style="padding:0.4rem 0.8rem; font-size:0.8rem; white-space:nowrap;">Delete</button>
+                        </div>
+                    `;
+                    failedList.appendChild(li);
+                });
+            }
+            
+            if (!data.completed || data.completed.length === 0) {
+                completedList.innerHTML = '<li style="color:var(--text-muted)">No completed jobs recorded yet.</li>';
+            } else {
+                // sort completed by timestamp newest first
+                data.completed.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+                data.completed.forEach(item => {
+                    const li = document.createElement('li');
+                    li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg-main); border-radius:6px; border:1px solid var(--border-color);';
+                    
+                    const dateStr = item.date_str ? new Date(item.date_str).toLocaleString() : 'Unknown date';
+                    li.innerHTML = `
+                        <div style="display:flex; flex-direction:column; overflow:hidden; padding-right:1rem;">
+                            <strong style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0.25rem; font-size:0.9rem;">${item.url}</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">
+                                <span style="color:var(--success-text);">✓ Success</span> · Tag: ${item.tag} · ${dateStr}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap: 0.5rem; flex-shrink: 0;">
+                            <button class="btn danger-btn delete-completed-btn" data-url="${item.url}" style="padding:0.4rem 0.8rem; font-size:0.8rem; white-space:nowrap;">Delete</button>
+                        </div>
+                    `;
+                    completedList.appendChild(li);
+                });
+            }
+            
+            // Bind retry buttons
+            document.querySelectorAll('.retry-failed-btn:not([disabled])').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const url = e.target.getAttribute('data-url');
+                    e.target.textContent = 'Retrying...';
+                    e.target.disabled = true;
+                    try {
+                        const res = await fetch('/api/failed/retry', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ urls: [url] })
+                        });
+                        if (res.ok) {
+                            showToast('Retrying failed job...');
+                            previousQueueCount = 1;
+                            startQueuePolling();
+                            loadActivityMonitor();
+                        } else {
+                            const data = await res.json();
+                            alert(`Failed: ${data.detail}`);
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    } finally {
+                        e.target.textContent = 'Retry';
+                        e.target.disabled = false;
+                    }
+                });
+            });
+
+            // Bind delete failed buttons
+            document.querySelectorAll('.delete-failed-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const url = e.target.getAttribute('data-url');
+                    const safeUrl = encodeURIComponent(url);
+                    try {
+                        const res = await fetch(`/api/activity/failed?url=${safeUrl}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            e.target.closest('li').remove();
+                            showToast('Failed job removed');
+                            if (failedList.children.length === 0) {
+                                failedList.innerHTML = '<li style="color:var(--text-muted)">No failed jobs. 🎉</li>';
+                            }
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+            });
+            
+            // Bind delete completed buttons
+            document.querySelectorAll('.delete-completed-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const url = e.target.getAttribute('data-url');
+                    const safeUrl = encodeURIComponent(url);
+                    try {
+                        const res = await fetch(`/api/activity/completed?url=${safeUrl}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            e.target.closest('li').remove();
+                            showToast('Completed job record removed');
+                            if (completedList.children.length === 0) {
+                                completedList.innerHTML = '<li style="color:var(--text-muted)">No completed jobs recorded yet.</li>';
+                            }
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                });
+            });
+            
         } catch (err) {
-            logsContent.textContent = 'Failed to load logs.';
+            failedList.innerHTML = '<li style="color:var(--text-muted)">Failed to load.</li>';
+            completedList.innerHTML = '<li style="color:var(--text-muted)">Failed to load.</li>';
         }
     }
     
-    refreshLogsBtn.addEventListener('click', loadLogs);
+    refreshActivityBtn.addEventListener('click', loadActivityMonitor);
 
     // --- Info Tabs ---
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1031,80 +1177,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             storageText.textContent = '--';
-        }
-    }
-
-    // --- Failed Jobs ---
-    async function loadFailedJobs() {
-        failedList.innerHTML = '<li style="color:var(--text-muted)">Loading...</li>';
-        try {
-            const res = await fetch('/api/failed?t=' + Date.now(), { cache: 'no-store' });
-            const data = await res.json();
-            
-            failedList.innerHTML = '';
-            if (!data.jobs || data.jobs.length === 0) {
-                failedList.innerHTML = '<li style="color:var(--text-muted)">No failed jobs. 🎉</li>';
-                return;
-            }
-            
-            data.jobs.forEach(item => {
-                const li = document.createElement('li');
-                li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:0.75rem; background:var(--bg-main); border-radius:6px; border:1px solid var(--border-color);';
-                
-                const strikes = item.attempts || 0;
-                const maxedOut = strikes >= 3;
-                const strikeLabel = maxedOut 
-                    ? '<span style="color:#ff4444; font-weight:600;">⛔ 3/3 strikes</span>'
-                    : `<span style="color:var(--text-muted);">${strikes}/3 strikes</span>`;
-                
-                li.innerHTML = `
-                    <div style="display:flex; flex-direction:column; overflow:hidden; padding-right:1rem;">
-                        <strong style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:0.25rem; font-size:0.9rem;">${item.url}</strong>
-                        <div style="font-size:0.8rem; color:var(--text-muted);">
-                            ${strikeLabel} · ${item.reason || 'Unknown error'}
-                        </div>
-                    </div>
-                    <button class="btn ${maxedOut ? 'secondary-btn' : 'primary-btn'} retry-failed-btn" 
-                        data-url="${item.url}" 
-                        ${maxedOut ? 'disabled title="Max retries reached"' : ''}
-                        style="padding:0.4rem 0.8rem; font-size:0.8rem; white-space:nowrap;">
-                        ${maxedOut ? 'Max Retries' : 'Retry'}
-                    </button>
-                `;
-                failedList.appendChild(li);
-            });
-            
-            // Bind retry buttons
-            document.querySelectorAll('.retry-failed-btn:not([disabled])').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    const url = e.target.getAttribute('data-url');
-                    e.target.textContent = 'Retrying...';
-                    e.target.disabled = true;
-                    try {
-                        const res = await fetch('/api/failed/retry', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ urls: [url] })
-                        });
-                        if (res.ok) {
-                            showToast('Retrying failed job...');
-                            previousQueueCount = 1;
-                            startQueuePolling();
-                            loadFailedJobs();
-                        } else {
-                            const data = await res.json();
-                            alert(`Failed: ${data.detail}`);
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    } finally {
-                        e.target.textContent = 'Retry';
-                        e.target.disabled = false;
-                    }
-                });
-            });
-        } catch (err) {
-            failedList.innerHTML = '<li style="color:var(--text-muted)">Failed to load.</li>';
         }
     }
     

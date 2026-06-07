@@ -78,6 +78,7 @@ BASE.mkdir(parents=True, exist_ok=True)
 
 FEEDS_FILE = BASE / "feeds.json"
 FAILED_FILE = BASE / "failed.json"
+COMPLETED_FILE = BASE / "completed.json"
 COOKIES_FILE = BASE / "cookies.json"
 FAVORITES_FILE = BASE / "favorites.json"
 MAX_ATTEMPTS = 3  # URL is permanently failed after this many total attempts
@@ -144,8 +145,21 @@ def _record_failure(url: str, tag: str, reason: str) -> None:
         "attempts": attempts,
         "status": "permanently_failed" if attempts >= MAX_ATTEMPTS else "failed",
         "last_failed": datetime.now(timezone.utc).isoformat(),
+        "timestamp": time.time()
     }
     _save_json(FAILED_FILE, failed)
+
+def _record_success(url: str, tag: str, filepath: str) -> None:
+    """Append a success record in completed.json."""
+    completed: list = _load_json(COMPLETED_FILE, [])
+    completed.append({
+        "url": url,
+        "tag": tag,
+        "filepath": filepath,
+        "timestamp": time.time(),
+        "date_str": datetime.now(timezone.utc).isoformat()
+    })
+    _save_json(COMPLETED_FILE, completed)
     if attempts >= MAX_ATTEMPTS:
         log.warning(
             "[failed] %s has failed %d times — marked permanently_failed.", url, attempts
@@ -171,6 +185,7 @@ async def _worker() -> None:
             slug = slugify(title)
             filepath = save_markdown(tag, slug, article)
             log.info("[queue] Saved -> %s  (%d chars)", filepath, len(article))
+            _record_success(url, tag, filepath)
 
         except ScrapeFailedError as exc:
             reason = str(exc)
@@ -299,6 +314,39 @@ def poll_rss_feeds():
 
 
 # ---------------------------------------------------------------------------
+# Cleanup Job (10-day retention)
+# ---------------------------------------------------------------------------
+
+def _cleanup_jobs_logs():
+    """Remove jobs older than 10 days and truncate app.log if too large."""
+    ten_days = 864000
+    now = time.time()
+    
+    # 1. Clean failed.json
+    failed = _load_json(FAILED_FILE, {})
+    new_failed = {k: v for k, v in failed.items() if (now - v.get("timestamp", now)) <= ten_days}
+    if len(new_failed) != len(failed):
+        _save_json(FAILED_FILE, new_failed)
+        
+    # 2. Clean completed.json
+    completed = _load_json(COMPLETED_FILE, [])
+    new_completed = [v for v in completed if (now - v.get("timestamp", now)) <= ten_days]
+    if len(new_completed) != len(completed):
+        _save_json(COMPLETED_FILE, new_completed)
+        
+    # 3. Truncate app.log to last 1000 lines if > 5MB
+    log_file = BASE / "app.log"
+    if log_file.exists() and log_file.stat().st_size > 5 * 1024 * 1024:
+        try:
+            with open(log_file, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            if len(lines) > 1000:
+                with open(log_file, "w", encoding="utf-8") as f:
+                    f.writelines(lines[-1000:])
+        except Exception as e:
+            log.error("Failed to truncate app.log: %s", e)
+
+# ---------------------------------------------------------------------------
 # Lifespan — starts/stops background worker + scheduler cleanly
 # ---------------------------------------------------------------------------
 
@@ -316,8 +364,9 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     # Start APScheduler for RSS polling (every 2 hours)
     scheduler = BackgroundScheduler()
     scheduler.add_job(poll_rss_feeds, "interval", hours=2, id="rss_poll")
+    scheduler.add_job(_cleanup_jobs_logs, "interval", days=1, id="cleanup_jobs")
     scheduler.start()
-    log.info("[startup] RSS scheduler started (interval: 2h).")
+    log.info("[startup] RSS scheduler started (interval: 2h). Cleanup scheduler started (interval: 1d).")
 
     yield
 
@@ -338,7 +387,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 app = FastAPI(
     title="LocalScrape API",
     description="Async article-scraping queue backed by archive.md + readability.",
-    version="1.4.0",
+    version="1.6.0",
     lifespan=lifespan,
 )
 
@@ -732,29 +781,33 @@ def fetch_rss_feed(url: str):
 # Feature 2 — Failed Jobs Vault
 # ---------------------------------------------------------------------------
 
-@app.get("/api/failed")
-async def list_failed():
-    """List all failed scrape jobs."""
+@app.get("/api/activity")
+async def list_activity():
+    """List all failed and completed scrape jobs."""
     failed: dict = _load_json(FAILED_FILE, {})
+    completed: list = _load_json(COMPLETED_FILE, [])
     return {
-        "total": len(failed),
-        "permanently_failed": sum(
-            1 for v in failed.values() if v.get("status") == "permanently_failed"
-        ),
-        "jobs": list(failed.values()),
+        "failed": list(failed.values()),
+        "completed": completed
     }
 
-
-@app.delete("/api/failed/{encoded_url}")
-async def delete_failed_job(encoded_url: str):
-    """Remove a single failed job record (URL must be URL-encoded)."""
-    url = unquote(encoded_url)
+@app.delete("/api/activity/failed")
+async def delete_activity_failed(url: str):
+    """Remove a single failed job record."""
     failed: dict = _load_json(FAILED_FILE, {})
-    if url not in failed:
-        raise HTTPException(status_code=404, detail="Failed job not found.")
-    del failed[url]
-    _save_json(FAILED_FILE, failed)
-    return {"message": f"Removed failed record for '{url}'."}
+    if url in failed:
+        del failed[url]
+        _save_json(FAILED_FILE, failed)
+    return {"status": "deleted", "url": url}
+
+@app.delete("/api/activity/completed")
+async def delete_activity_completed(url: str):
+    """Remove a single completed job log record."""
+    completed: list = _load_json(COMPLETED_FILE, [])
+    new_completed = [j for j in completed if j.get("url") != url]
+    if len(new_completed) != len(completed):
+        _save_json(COMPLETED_FILE, new_completed)
+    return {"status": "deleted", "url": url}
 
 
 @app.post("/api/failed/retry", status_code=202)
