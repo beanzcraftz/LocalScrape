@@ -1,18 +1,56 @@
-// --- Splash Screen ---
+// --- Splash Screen (Session-Based + Inactivity Timer) ---
 document.addEventListener('DOMContentLoaded', () => {
     const splashScreen = document.getElementById('splash-screen');
     const splashBtn = document.getElementById('splash-enter-btn');
     const appLayout = document.getElementById('app-layout');
 
+    // --- Inactivity Timer (10 minutes) ---
+    let inactivityTimeout = null;
+    const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes
+
+    function resetInactivityTimer() {
+        if (inactivityTimeout) clearTimeout(inactivityTimeout);
+        inactivityTimeout = setTimeout(() => {
+            showSplash();
+        }, INACTIVITY_LIMIT);
+    }
+
+    ['mousemove', 'click', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, { passive: true });
+    });
+
+    function dismissSplash() {
+        splashScreen.classList.add('fade-out');
+        splashScreen.classList.remove('fade-in');
+        sessionStorage.setItem('splashDismissed', 'true');
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+            appLayout.classList.remove('hidden');
+        }, 600);
+        resetInactivityTimer();
+    }
+
+    function showSplash() {
+        sessionStorage.removeItem('splashDismissed');
+        splashScreen.classList.remove('fade-out');
+        splashScreen.style.display = 'flex';
+        // Trigger reflow then add fade-in
+        void splashScreen.offsetWidth;
+        splashScreen.classList.add('fade-in');
+        appLayout.classList.add('hidden');
+        if (inactivityTimeout) clearTimeout(inactivityTimeout);
+    }
+
+    // Check session: skip splash if already dismissed this session
     if (splashBtn && splashScreen && appLayout) {
-        splashBtn.addEventListener('click', () => {
-            splashScreen.classList.add('fade-out');
-            // After the CSS transition ends, remove splash and show app
-            setTimeout(() => {
-                splashScreen.style.display = 'none';
-                appLayout.classList.remove('hidden');
-            }, 600);
-        });
+        if (sessionStorage.getItem('splashDismissed')) {
+            // Skip splash entirely on refresh
+            splashScreen.style.display = 'none';
+            appLayout.classList.remove('hidden');
+            resetInactivityTimer();
+        } else {
+            splashBtn.addEventListener('click', dismissSplash);
+        }
     }
 });
 
@@ -42,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.querySelector('.sidebar');
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     
+    const navLibraryBtn = document.getElementById('nav-library-btn');
     const navDashboardBtn = document.getElementById('nav-dashboard-btn');
     const navRssBtn = document.getElementById('nav-rss-btn');
     const navFailedBtn = document.getElementById('nav-failed-btn');
@@ -60,6 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const failedJobsView = document.getElementById('failed-jobs-view');
     const failedList = document.getElementById('failed-list');
     const emptyStateView = document.getElementById('empty-state-view');
+    const libraryView = document.getElementById('library-view');
+    const tagArticlesView = document.getElementById('tag-articles-view');
+    const backToLibraryBtn = document.getElementById('back-to-library-btn');
+    const tagArticlesTitle = document.getElementById('tag-articles-title');
+    const tagArticlesList = document.getElementById('tag-articles-list');
     
     const emptyStateDashboardBtn = document.getElementById('empty-state-dashboard-btn');
     const refreshLogsBtn = document.getElementById('refresh-logs-btn');
@@ -195,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         });
                         if (res.ok) {
                             loadTags();
-                            switchView('dashboard');
+                            switchView('library');
                         } else {
                             const error = await res.json();
                             alert(`Failed to rename tag: ${error.detail}`);
@@ -215,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const res = await fetch(`/api/tags/${tag}`, { method: 'DELETE' });
                         if (res.ok) {
                             loadTags();
-                            switchView('dashboard');
+                            switchView('library');
                         } else {
                             alert('Failed to delete tag.');
                         }
@@ -295,10 +339,19 @@ document.addEventListener('DOMContentLoaded', () => {
         failedJobsView.classList.add('hidden');
         emptyStateView.classList.add('hidden');
         readerControls.classList.add('hidden');
+        libraryView.classList.add('hidden');
+        tagArticlesView.classList.add('hidden');
 
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
 
-        if (viewName === 'dashboard') {
+        if (viewName === 'library') {
+            libraryView.classList.remove('hidden');
+            navLibraryBtn.classList.add('active');
+            renderLibraryTiles();
+        } else if (viewName === 'tag-articles') {
+            tagArticlesView.classList.remove('hidden');
+            navLibraryBtn.classList.add('active');
+        } else if (viewName === 'dashboard') {
             controlCard.classList.remove('hidden');
             navDashboardBtn.classList.add('active');
         } else if (viewName === 'rss') {
@@ -319,7 +372,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'reader') {
             readerView.classList.remove('hidden');
             readerControls.classList.remove('hidden');
-            // don't mark any nav-btn active so dashboard is deselected
         } else if (viewName === 'empty-state') {
             emptyStateView.classList.remove('hidden');
         }
@@ -331,13 +383,107 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    navLibraryBtn.addEventListener('click', () => switchView('library'));
     navDashboardBtn.addEventListener('click', () => switchView('dashboard'));
     navRssBtn.addEventListener('click', () => switchView('rss'));
     navFailedBtn.addEventListener('click', () => switchView('failed'));
     navLogsBtn.addEventListener('click', () => switchView('logs'));
     navInfoBtn.addEventListener('click', () => switchView('info'));
     
-    emptyStateDashboardBtn.addEventListener('click', () => switchView('dashboard'));
+    emptyStateDashboardBtn.addEventListener('click', () => switchView('library'));
+
+    // --- Library Tiles ---
+    async function renderLibraryTiles() {
+        const tilesContainer = document.getElementById('library-tiles');
+        tilesContainer.innerHTML = '<p style="color:var(--text-muted)">Loading your library...</p>';
+        
+        try {
+            const res = await fetch('/api/tags?t=' + Date.now(), { cache: "no-store" });
+            const data = await res.json();
+            
+            tilesContainer.innerHTML = '';
+            
+            if (data.tags.length === 0) {
+                tilesContainer.innerHTML = `
+                    <div class="library-empty">
+                        <div class="empty-icon">\ud83d\udced</div>
+                        <h3>No collections yet</h3>
+                        <p>Head over to <strong>Add Articles/Links</strong> to start building your library.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Fetch article counts for each tag in parallel
+            const countPromises = data.tags.map(async tag => {
+                try {
+                    const r = await fetch(`/api/articles/${tag}`);
+                    const d = await r.json();
+                    return { tag, count: d.articles ? d.articles.length : 0 };
+                } catch {
+                    return { tag, count: 0 };
+                }
+            });
+            
+            const tagCounts = await Promise.all(countPromises);
+            
+            tagCounts.forEach(({ tag, count }) => {
+                const tile = document.createElement('div');
+                tile.className = 'tag-tile';
+                tile.innerHTML = `
+                    <div class="tag-tile-icon">\ud83d\udcc1</div>
+                    <div class="tag-tile-name">${tag}</div>
+                    <div class="tag-tile-count">${count} article${count !== 1 ? 's' : ''}</div>
+                `;
+                tile.addEventListener('click', () => openTagView(tag));
+                tilesContainer.appendChild(tile);
+            });
+            
+        } catch (err) {
+            console.error('Failed to load library tiles:', err);
+            tilesContainer.innerHTML = '<p style="color:var(--error-text)">Failed to load library.</p>';
+        }
+    }
+
+    async function openTagView(tag) {
+        switchView('tag-articles');
+        tagArticlesTitle.textContent = `\ud83d\udcc1 ${tag}`;
+        tagArticlesList.innerHTML = '<p style="color:var(--text-muted)">Loading articles...</p>';
+        
+        try {
+            const res = await fetch(`/api/articles/${tag}`);
+            const data = await res.json();
+            
+            tagArticlesList.innerHTML = '';
+            
+            if (data.articles.length === 0) {
+                tagArticlesList.innerHTML = `
+                    <div class="library-empty">
+                        <div class="empty-icon">\ud83d\udcf0</div>
+                        <h3>No articles in this collection</h3>
+                        <p>Scrape some URLs with this tag to populate it.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            data.articles.forEach(article => {
+                const card = document.createElement('div');
+                card.className = 'article-card';
+                card.innerHTML = `
+                    <div class="article-card-icon">\ud83d\udcc4</div>
+                    <div class="article-card-name">${article.replace('.md', '')}</div>
+                `;
+                card.addEventListener('click', () => openArticle(tag, article));
+                tagArticlesList.appendChild(card);
+            });
+        } catch (err) {
+            console.error('Failed to load tag articles:', err);
+            tagArticlesList.innerHTML = '<p style="color:var(--error-text)">Failed to load articles.</p>';
+        }
+    }
+
+    backToLibraryBtn.addEventListener('click', () => switchView('library'));
 
     // --- Reader View ---
     function stripFrontMatter(text) {
@@ -405,7 +551,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     closeReaderBtn.addEventListener('click', () => {
-        switchView('dashboard');
+        switchView('library');
         endOfArticle.classList.add('hidden');
         document.querySelectorAll('.article-item.active').forEach(el => el.classList.remove('active'));
     });
@@ -417,9 +563,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/articles/${currentArticleTag}/${currentArticleFilename}`, { method: 'DELETE' });
             if (res.ok) {
                 showToast('Article deleted');
-                loadTags();
-                loadStorage();
-                switchView('dashboard');
+                    loadTags();
+                    loadStorage();
+                    switchView('library');
             } else {
                 alert('Failed to delete article.');
             }
@@ -456,7 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch(`/api/articles/${currentArticleTag}/${currentArticleFilename}`, { method: 'DELETE' });
                 if (res.ok) {
                     loadTags();
-                    switchView('dashboard');
+                    switchView('library');
                 } else {
                     alert('Failed to delete article.');
                 }
@@ -848,6 +994,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Initialization ---
+    switchView('library');
     loadTags();
     loadStorage();
     checkQueue(); // Check if anything is pending on initial load

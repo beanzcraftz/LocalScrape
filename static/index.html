@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LocalScrape Dashboard</title>
+    <meta name="description" content="Self-hosted, offline-first bookmarking and article-reading web app.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Cpath d='M25 20h50v60H25z' fill='none' stroke='%233b82f6' stroke-width='4' rx='3'/%3E%3Cpath d='M35 35h30M35 47h30M35 59h20' stroke='%2360a5fa' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M65 65l10 10' stroke='%2300ff88' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,7 +31,7 @@
                 Let's Go!
                 <span class="splash-btn-arrow">→</span>
             </button>
-            <span class="splash-version">v1.3.3</span>
+            <span class="splash-version">v1.4.0</span>
         </div>
     </div>
 
@@ -40,12 +42,15 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2>LocalScrape <span class="version">v1.3.3</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.4.0</span></h2>
             </div>
             <div class="sidebar-content">
+                <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
+                    <button id="nav-library-btn" class="nav-btn active">📚 Library</button>
+                </div>
                 <h3>Management</h3>
                 <div class="sidebar-menu">
-                    <button id="nav-dashboard-btn" class="nav-btn active">Dashboard</button>
+                    <button id="nav-dashboard-btn" class="nav-btn">Add Articles/Links</button>
                     <button id="nav-rss-btn" class="nav-btn">RSS Feeds</button>
                     <button id="nav-failed-btn" class="nav-btn">Failed Jobs</button>
                     <button id="nav-logs-btn" class="nav-btn">Logs</button>
@@ -105,6 +110,28 @@
                             <button id="scrape-btn" class="btn primary-btn">Scrape</button>
                         </div>
                         <div id="scrape-message" class="message hidden"></div>
+                    </div>
+                </section>
+
+                <!-- Library Tiles View (Default Home) -->
+                <section id="library-view" class="library-view">
+                    <div class="library-header">
+                        <h2>📚 Your Library</h2>
+                        <p>Select a collection to browse your saved articles.</p>
+                    </div>
+                    <div id="library-tiles" class="library-tiles-grid">
+                        <!-- Tag tiles populated by JS -->
+                    </div>
+                </section>
+
+                <!-- Tag Articles View -->
+                <section id="tag-articles-view" class="tag-articles-view hidden">
+                    <div class="tag-articles-header">
+                        <button id="back-to-library-btn" class="btn secondary-btn">← Back to Library</button>
+                        <h2 id="tag-articles-title">Tag Name</h2>
+                    </div>
+                    <div id="tag-articles-list" class="articles-grid">
+                        <!-- Articles populated by JS -->
                     </div>
                 </section>
 
@@ -230,6 +257,14 @@
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog</h3>
+                            <h4>v1.4.0</h4>
+                            <ul>
+                                <li><strong>Library Tile Layout:</strong> The default home screen is now a CSS Grid of large, clickable Tag Tiles showing folder icons and article counts. Click a tile to browse its articles in a clean full-width list.</li>
+                                <li><strong>Sidebar Restructure:</strong> "Dashboard" renamed to "Add Articles/Links" and moved under a <code>MANAGEMENT</code> section. A new <strong>📚 Library</strong> button is the primary navigation item.</li>
+                                <li><strong>Session Splash Screen:</strong> The splash/start page now uses <code>sessionStorage</code> and only appears once per browser session. Page refreshes skip it entirely.</li>
+                                <li><strong>Inactivity Lock:</strong> After 10 minutes of no interaction (mouse, keyboard, scroll), the splash screen fades back in to hide app contents. Click "Let's Go!" to resume.</li>
+                                <li><strong>Branding:</strong> New inline SVG brand icon in the sidebar header and a custom document/search favicon replacing the default browser icon.</li>
+                            </ul>
                             <h4>v1.3.3</h4>
                             <ul>
                                 <li><strong>Automated Maintenance:</strong> Added a background cleanup job that automatically deletes RSS articles older than 5 days.</li>
@@ -237,12 +272,11 @@
                             <h4>v1.3.2</h4>
                             <ul>
                                 <li><strong>UI Enhancement:</strong> The left-hand sidebar is now draggable/resizable so you can read long article headings. Width is saved across sessions.</li>
-                                <li><strong>Bug Fix:</strong> Fixed a `NameError` crash in the system stats endpoint that was causing the storage badge to display `--`.</li>
+                                <li><strong>Bug Fix:</strong> Fixed a <code>NameError</code> crash in the system stats endpoint that was causing the storage badge to display <code>--</code>.</li>
                             </ul>
                             <h4>v1.3.1</h4>
                             <ul>
                                 <li><strong>Splash Screen:</strong> Added a branded start page with animated neon glow effects and a "Let's Go!" entry button.</li>
-                            </ul>
                             </ul>
                             <h4>v1.3.0</h4>
                             <ul>

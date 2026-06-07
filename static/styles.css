@@ -910,6 +910,195 @@ textarea {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ===== SPLASH FADE-IN (Inactivity Return) ===== */
+.splash-overlay.fade-in {
+    opacity: 1;
+    visibility: visible;
+    display: flex;
+}
+
+/* ===== LIBRARY TILES VIEW ===== */
+.library-view {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.library-header {
+    margin-bottom: 2rem;
+}
+
+.library-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.library-header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.library-tiles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.tag-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.tag-tile::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-color), #00ff88);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.tag-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-color);
+}
+
+.tag-tile:hover::before {
+    opacity: 1;
+}
+
+.tag-tile:active {
+    transform: translateY(-1px);
+}
+
+.tag-tile-icon {
+    font-size: 2.5rem;
+    line-height: 1;
+}
+
+.tag-tile-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-main);
+    word-break: break-word;
+}
+
+.tag-tile-count {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.tag-tile-count::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+/* ===== TAG ARTICLES VIEW ===== */
+.tag-articles-view {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.tag-articles-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.tag-articles-header h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+.articles-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.article-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.article-card:hover {
+    border-color: var(--accent-color);
+    background: var(--bg-sidebar);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.article-card-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+}
+
+.article-card-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-main);
+    word-break: break-word;
+}
+
+/* ===== LIBRARY EMPTY STATE ===== */
+.library-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.library-empty .empty-icon {
+    font-size: 3.5rem;
+    opacity: 0.4;
+    margin-bottom: 1rem;
+}
+
+.library-empty h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.library-empty p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sidebar {
@@ -926,5 +1115,16 @@ textarea {
     }
     .input-row {
         flex-direction: column;
+    }
+    .library-tiles-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 1rem;
+    }
+    .tag-tile {
+        padding: 1.25rem 1rem;
+    }
+    .tag-articles-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

@@ -1,6 +1,6 @@
 # 🚀 LocalScrape
 
-![Version](https://img.shields.io/badge/version-v1.3.3-blue)
+![Version](https://img.shields.io/badge/version-v1.4.0-blue)
 ![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
