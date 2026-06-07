@@ -113,6 +113,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteArticleBtn = document.getElementById('delete-article-btn');
     const endOfArticle = document.getElementById('end-of-article');
     const endDeleteBtn = document.getElementById('end-delete-btn');
+    const downloadArticleBtn = document.getElementById('download-article-btn');
+    
+    const librarySearch = document.getElementById('library-search');
+    const tagSearch = document.getElementById('tag-search');
+    const readingProgress = document.getElementById('reading-progress');
     
     const storageText = document.getElementById('storage-text');
     
@@ -122,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentArticleTag = null;
     let currentArticleFilename = null;
+    let currentArticleRaw = null;
 
     // --- State ---
     let pollInterval = null;
@@ -174,14 +180,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        let newTheme = 'dark';
+        if (currentTheme === 'dark') newTheme = 'terminal';
+        else if (currentTheme === 'terminal') newTheme = 'light';
+        else newTheme = 'dark';
+        
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
         updateThemeIcon(newTheme);
     }
 
     function updateThemeIcon(theme) {
-        themeIcon.textContent = theme === 'dark' ? '🌙' : '☀️';
+        if (theme === 'dark') themeIcon.textContent = '🌙';
+        else if (theme === 'light') themeIcon.textContent = '☀️';
+        else themeIcon.textContent = '💻';
     }
 
     themeToggleBtn.addEventListener('click', toggleTheme);
@@ -305,14 +317,18 @@ document.addEventListener('DOMContentLoaded', () => {
             data.articles.forEach(article => {
                 const li = document.createElement('li');
                 li.className = 'article-item';
-                li.textContent = article.replace('.md', '');
-                li.title = article;
+                li.style.flexDirection = 'column';
+                li.style.alignItems = 'flex-start';
+                
+                const dateStr = new Date(article.added_at * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                li.innerHTML = `<span style="word-break: break-word;">${article.filename.replace('.md', '')}</span><span class="article-date">${dateStr}</span>`;
+                li.title = article.filename;
                 
                 li.addEventListener('click', (e) => {
                     // Highlight active
                     document.querySelectorAll('.article-item.active').forEach(el => el.classList.remove('active'));
                     li.classList.add('active');
-                    openArticle(tag, article);
+                    openArticle(tag, article.filename);
                     
                     // Close sidebar on mobile
                     if (window.innerWidth <= 768) {
@@ -331,6 +347,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- View Management ---
     function switchView(viewName) {
+        if (librarySearch) librarySearch.value = '';
+        if (tagSearch) tagSearch.value = '';
+        if (readingProgress) readingProgress.style.width = '0%';
+        
         controlCard.classList.add('hidden');
         readerView.classList.add('hidden');
         logsView.classList.add('hidden');
@@ -470,11 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
             data.articles.forEach(article => {
                 const card = document.createElement('div');
                 card.className = 'article-card';
+                const dateStr = new Date(article.added_at * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                 card.innerHTML = `
                     <div class="article-card-icon">\ud83d\udcc4</div>
-                    <div class="article-card-name">${article.replace('.md', '')}</div>
+                    <div style="display:flex; flex-direction:column; justify-content:center;">
+                        <div class="article-card-name">${article.filename.replace('.md', '')}</div>
+                        <span class="article-date">${dateStr}</span>
+                    </div>
                 `;
-                card.addEventListener('click', () => openArticle(tag, article));
+                card.addEventListener('click', () => openArticle(tag, article.filename));
                 tagArticlesList.appendChild(card);
             });
         } catch (err) {
@@ -512,6 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/articles/${tag}/${filename}`);
             if (!res.ok) throw new Error('Article not found');
             const markdownText = await res.text();
+            currentArticleRaw = markdownText;
             
             const { meta, body } = stripFrontMatter(markdownText);
             
@@ -531,18 +556,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             markdownContent.innerHTML = metaHtml + marked.parse(body);
             
-            // Scroll detection: show delete prompt when near the bottom
+            // Scroll detection: show delete prompt when near the bottom & update progress bar
             const scrollContainer = readerView.closest('.content-scrollable');
             if (scrollContainer) {
                 const onScroll = () => {
                     const scrollBottom = scrollContainer.scrollTop + scrollContainer.clientHeight;
                     const totalHeight = scrollContainer.scrollHeight;
+                    
+                    // Update Progress Bar
+                    if (readingProgress) {
+                        const scrollableDist = totalHeight - scrollContainer.clientHeight;
+                        let progress = 0;
+                        if (scrollableDist > 0) {
+                            progress = Math.min(100, Math.max(0, (scrollContainer.scrollTop / scrollableDist) * 100));
+                        }
+                        readingProgress.style.width = `${progress}%`;
+                    }
+                    
                     if (scrollBottom >= totalHeight - 100) {
                         endOfArticle.classList.remove('hidden');
-                        scrollContainer.removeEventListener('scroll', onScroll);
+                    } else {
+                        endOfArticle.classList.add('hidden');
                     }
                 };
-                scrollContainer.addEventListener('scroll', onScroll);
+                // Ensure no duplicate listeners if opened multiple times
+                scrollContainer.onscroll = onScroll;
             }
         } catch (err) {
             console.error('Failed to load article content:', err);
@@ -991,6 +1029,43 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             failedList.innerHTML = '<li style="color:var(--text-muted)">Failed to load.</li>';
         }
+    }
+    
+    // --- Instant Search ---
+    if (librarySearch) {
+        librarySearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.tag-tile').forEach(tile => {
+                const name = tile.querySelector('.tag-tile-name').textContent.toLowerCase();
+                tile.style.display = name.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    if (tagSearch) {
+        tagSearch.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.article-card').forEach(card => {
+                const name = card.querySelector('.article-card-name').textContent.toLowerCase();
+                card.style.display = name.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    // --- Download Article ---
+    if (downloadArticleBtn) {
+        downloadArticleBtn.addEventListener('click', () => {
+            if (!currentArticleFilename || !currentArticleRaw) return;
+            const blob = new Blob([currentArticleRaw], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentArticleFilename.endsWith('.md') ? currentArticleFilename : currentArticleFilename + '.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
     }
 
     // --- Initialization ---

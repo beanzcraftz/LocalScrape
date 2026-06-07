@@ -192,6 +192,26 @@
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
+[data-theme="terminal"] {
+    /* Terminal / Hacker Mode Variables */
+    --bg-main: #000000;
+    --bg-sidebar: #050505;
+    --bg-card: #0a0a0a;
+    --text-main: #34d399; /* Softer bright green */
+    --text-muted: #064e3b; /* Darker green */
+    --border-color: #022c22;
+    --accent-color: #059669; /* Darker green accent */
+    --accent-hover: #10b981;
+    --badge-bg: #064e3b;
+    --badge-text: #6ee7b7;
+    --error-bg: #450a0a;
+    --error-text: #fca5a5;
+    --success-bg: #022c22;
+    --success-text: #6ee7b7;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 255, 65, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 255, 65, 0.15), 0 2px 4px -1px rgba(0, 255, 65, 0.08);
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -1127,4 +1147,51 @@ textarea {
         flex-direction: column;
         align-items: flex-start;
     }
+}
+
+/* ===== NEW QOL FEATURES (v1.5.0) ===== */
+
+/* Search Bar */
+.search-bar {
+    width: 100%;
+    max-width: 300px;
+    padding: 0.5rem 1rem;
+    margin-top: 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    color: var(--text-main);
+    font-size: 0.9rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+.search-bar:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="terminal"] .search-bar:focus {
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.1);
+}
+
+/* Reading Progress */
+.reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background-color: var(--accent-color);
+    width: 0%;
+    z-index: 9999;
+    transition: width 0.1s ease-out;
+    pointer-events: none;
+}
+
+/* Article Date */
+.article-date {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
 }

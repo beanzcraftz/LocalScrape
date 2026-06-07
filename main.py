@@ -378,9 +378,14 @@ class TagsResponse(BaseModel):
     tags: list[str]
 
 
+class ArticleItem(BaseModel):
+    filename: str
+    added_at: float
+
+
 class ArticlesResponse(BaseModel):
     tag: str
-    articles: list[str]
+    articles: list[ArticleItem]
 
 
 class RenameRequest(BaseModel):
@@ -484,7 +489,15 @@ async def list_articles(
     folder = _safe_child(BASE, tag)
     if not folder.is_dir():
         raise HTTPException(status_code=404, detail=f"Tag '{tag}' not found.")
-    articles = sorted(f.name for f in folder.iterdir() if f.suffix == ".md")
+    
+    articles = []
+    for f in folder.iterdir():
+        if f.suffix == ".md":
+            articles.append(ArticleItem(filename=f.name, added_at=f.stat().st_mtime))
+            
+    # Sort newest first
+    articles.sort(key=lambda x: x.added_at, reverse=True)
+    
     return ArticlesResponse(tag=tag, articles=articles)
 
 

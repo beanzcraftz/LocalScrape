@@ -31,18 +31,21 @@
                 Let's Go!
                 <span class="splash-btn-arrow">→</span>
             </button>
-            <span class="splash-version">v1.4.0</span>
+            <span class="splash-version">v1.5.0</span>
         </div>
     </div>
 
     <div class="app-layout hidden" id="app-layout">
+        <!-- Reading Progress Bar -->
+        <div id="reading-progress" class="reading-progress"></div>
+        
         <!-- Mobile Sidebar Backdrop -->
         <div id="sidebar-backdrop" class="sidebar-backdrop hidden"></div>
 
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.4.0</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.5.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
@@ -117,7 +120,8 @@
                 <section id="library-view" class="library-view">
                     <div class="library-header">
                         <h2>📚 Your Library</h2>
-                        <p>Select a collection to browse your saved articles.</p>
+                        <p>Select a collection to browse your saved articles. <span style="font-size: 0.85em; color: var(--text-muted);">(Sorted newest first)</span></p>
+                        <input type="search" id="library-search" class="search-bar" placeholder="Search collections...">
                     </div>
                     <div id="library-tiles" class="library-tiles-grid">
                         <!-- Tag tiles populated by JS -->
@@ -129,6 +133,7 @@
                     <div class="tag-articles-header">
                         <button id="back-to-library-btn" class="btn secondary-btn">← Back to Library</button>
                         <h2 id="tag-articles-title">Tag Name</h2>
+                        <input type="search" id="tag-search" class="search-bar" placeholder="Search articles...">
                     </div>
                     <div id="tag-articles-list" class="articles-grid">
                         <!-- Articles populated by JS -->
@@ -139,6 +144,7 @@
                 <section id="reader-view" class="reader-view hidden">
                     <div class="reader-header-bar">
                         <button id="close-reader-btn" class="btn secondary-btn close-btn">← Back</button>
+                        <button id="download-article-btn" class="btn secondary-btn action-btn">⬇️ Download</button>
                         <button id="rename-article-btn" class="btn secondary-btn action-btn">✏️ Rename</button>
                         <button id="delete-article-btn" class="btn danger-btn action-btn">🗑️ Delete</button>
                     </div>
@@ -257,6 +263,14 @@
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog</h3>
+                            <h4>v1.5.0</h4>
+                            <ul>
+                                <li><strong>Terminal Theme:</strong> Added a third "Hacker" theme to the switcher.</li>
+                                <li><strong>Instant Search:</strong> Find tags and articles quickly using the new search bars in the library views.</li>
+                                <li><strong>Reading Progress Bar:</strong> A fixed progress indicator appears when reading long articles.</li>
+                                <li><strong>Download Button:</strong> Export articles directly to your local machine as <code>.md</code> files.</li>
+                                <li><strong>Article Dates:</strong> Articles now display their added dates and sort by newest first across all views.</li>
+                            </ul>
                             <h4>v1.4.0</h4>
                             <ul>
                                 <li><strong>Library Tile Layout:</strong> The default home screen is now a CSS Grid of large, clickable Tag Tiles showing folder icons and article counts. Click a tile to browse its articles in a clean full-width list.</li>
