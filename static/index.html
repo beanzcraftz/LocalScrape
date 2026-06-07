@@ -32,7 +32,7 @@
                 Let's Go!
                 <span class="splash-btn-arrow">→</span>
             </button>
-            <span class="splash-version">v1.6.5</span>
+            <span class="splash-version">v1.7.0</span>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.6.5</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v1.7.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
@@ -143,10 +143,19 @@
 
                 <!-- Reader View -->
                 <section id="reader-view" class="reader-view hidden">
+                    <div id="focus-exit-controls" class="hidden">
+                        <button id="exit-focus-btn" title="Exit Focus Mode">❌</button>
+                        <button id="auto-scroll-btn" title="Auto-Scroll">⬇️</button>
+                    </div>
                     <div class="reader-header-bar">
                         <button id="close-reader-btn" class="btn secondary-btn close-btn">← Back</button>
                         <button id="focus-mode-btn" class="btn secondary-btn action-btn">👓 Focus</button>
                         <button id="tts-listen-btn" class="btn secondary-btn action-btn">🎧 Listen</button>
+                        <div id="tts-controls" class="hidden" style="display:inline-flex; align-items:center; gap:0.5rem; margin-left:0.5rem; border:1px solid var(--border-color); padding:0.25rem 0.5rem; border-radius:4px; background:var(--bg-card);">
+                            <label for="tts-speed" style="font-size:0.75rem; color:var(--text-muted); cursor:pointer; margin-bottom:0;">Speed</label>
+                            <input type="range" id="tts-speed" min="0.5" max="2" step="0.1" value="1" style="width:60px; margin:0;">
+                            <span id="tts-speed-label" style="font-size:0.75rem; color:var(--text-muted);">1.0x</span>
+                        </div>
                         <button id="favorite-article-btn" class="btn secondary-btn action-btn">★ Favorite</button>
                         <button id="download-article-btn" class="btn secondary-btn action-btn">⬇️ Download</button>
                         <button id="rename-article-btn" class="btn secondary-btn action-btn">✏️ Rename</button>
@@ -242,7 +251,7 @@
                         <!-- Help & Docs Tab -->
                         <div id="tab-help-docs" class="tab-content">
                             <h3>How to use LocalScrape</h3>
-                            <p><strong>1. Scraping URLs:</strong> On the Dashboard, paste one or more URLs into the text area. Select an existing tag from the dropdown, or type a new tag name. Click "Scrape" — articles are processed in the background and will appear under your chosen tag.</p>
+                            <p><strong>1. Add Articles/Links:</strong> Click the "Add Articles/Links" button in the sidebar. Paste one or more URLs into the text area. Select an existing tag from the dropdown, or type a new tag name. Click "Scrape" — articles are processed in the background and will appear in your Library under the chosen tag.</p>
                             <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
                                 <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
                             </div>
@@ -265,15 +274,22 @@
                                 Every article in the feed will be scraped. Use keywords to filter only what you care about (e.g. <code>AI, machine learning</code> will only scrape articles mentioning either term).
                             </div>
                             
-                            <p><strong>3. Viewing:</strong> Click on a tag in the Your Library sidebar to expand it. You can instantly filter articles using the Search Bar. Click on an article to open the Reader View. Use the top bar to adjust text size or toggle themes.</p>
-                            <p><strong>4. Reader Tools:</strong> Inside the Reader View, use the action buttons to <strong>👓 Focus</strong> (hide distractions), <strong>🎧 Listen</strong> (text-to-speech), or <strong>★ Favorite</strong> the article to pin it to your Dashboard. You can also export articles as Markdown using the <strong>⬇️ Download</strong> button, or hit `Ctrl+P` to save a clean PDF.</p>
-                            <p><strong>5. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading. You can also download a zip of your entire library using the <strong>Backup Data</strong> button in the sidebar.</p>
-                            <p><strong>6. Storage & Performance:</strong> The 💾 counter in the top-right header shows total library size. If it exceeds 500MB, it will turn red as a warning. As a Progressive Web App (PWA), you can also "Add to Homescreen" on mobile devices for a native app experience!</p>
+                            <p><strong>3. Activity Monitor:</strong> The Activity Monitor displays real-time backend logs and a 10-day history of successfully completed or failed jobs.</p>
+                            <p><strong>4. Viewing:</strong> Click on a tag in Your Library or Dashboard to expand it. You can instantly filter articles using the Search Bar. Click on an article to open the Reader View. Use the top bar to adjust text size or toggle themes.</p>
+                            <p><strong>5. Reader Tools:</strong> Inside the Reader View, use the action buttons to <strong>👓 Focus</strong> (hide distractions), <strong>🎧 Listen</strong> (text-to-speech with speed controls), or <strong>★ Favorite</strong> the article to pin it to your Library grid. You can also export articles as Markdown using the <strong>⬇️ Download</strong> button, or hit `Ctrl+P` to save a clean PDF.</p>
+                            <p><strong>6. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading. You can also download a zip of your entire library using the <strong>Backup Data</strong> button in the sidebar.</p>
+                            <p><strong>7. Storage & Performance:</strong> The 💾 counter in the top-right header shows total library size. If it exceeds 500MB, it will turn red as a warning. As a Progressive Web App (PWA), you can also "Add to Homescreen" on mobile devices for a native app experience!</p>
                         </div>
                         
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog</h3>
+                            <h4>v1.7.0</h4>
+                            <ul>
+                                <li><strong>Text-to-Speech Speed Control:</strong> Added a speed adjustment slider next to the TTS Listen button.</li>
+                                <li><strong>Zen Mode Controls:</strong> Added a floating action menu during Focus Mode with a "Close" button to exit and an "Auto-Scroll" button.</li>
+                                <li><strong>Documentation Overhaul:</strong> Fully updated the in-app Help & Docs.</li>
+                            </ul>
                             <h4>v1.6.5</h4>
                             <ul>
                                 <li><strong>Bug Fixes:</strong> Patched a critical UI initialization crash, fixed the Favorites dashboard tile rendering, and resolved a persistent background CPU pegging issue.</li>

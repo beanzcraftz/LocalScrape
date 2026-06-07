@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.7.0
+### New Features & Improvements
+- **Text-to-Speech Speed Control:** Added a speed adjustment slider next to the TTS Listen button (0.5x to 2.0x).
+- **Zen Mode Controls:** Added a floating action menu during Focus Mode with a "Close" button to exit and an "Auto-Scroll" button to automatically read down the page.
+- **Documentation Overhaul:** Fully updated the in-app Help & Docs to accurately reflect the new Add Articles/Links dashboard and Reader tools.
+
 ## v1.6.5
 ### Bug Fixes
 - **UI Initialization Crash:** Fixed a critical JavaScript ReferenceError caused by missing variables that prevented the sidebar, storage calculator, and dashboard library from loading properly.

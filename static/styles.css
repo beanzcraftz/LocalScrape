@@ -1223,6 +1223,46 @@ textarea {
     font-size: 1.1em;
 }
 
+#focus-exit-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    z-index: 1000;
+}
+
+.focus-mode #focus-exit-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#focus-exit-controls button {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#focus-exit-controls button:hover {
+    background: var(--bg-hover);
+    transform: scale(1.1);
+}
+
+
 /* ===== PRINT OPTIMIZATION ===== */
 @media print {
     body {

@@ -115,8 +115,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadArticleBtn = document.getElementById('download-article-btn');
     const focusModeBtn = document.getElementById('focus-mode-btn');
     const ttsListenBtn = document.getElementById('tts-listen-btn');
+    const ttsControls = document.getElementById('tts-controls');
+    const ttsSpeed = document.getElementById('tts-speed');
+    const ttsSpeedLabel = document.getElementById('tts-speed-label');
     const favoriteArticleBtn = document.getElementById('favorite-article-btn');
     const navBackupBtn = document.getElementById('nav-backup-btn');
+    
+    const exitFocusBtn = document.getElementById('exit-focus-btn');
+    const autoScrollBtn = document.getElementById('auto-scroll-btn');
     
     const librarySearch = document.getElementById('library-search');
     const tagSearch = document.getElementById('tag-search');
@@ -134,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let favoritesList = [];
     let isSpeaking = false;
     let isFocusMode = false;
+    let autoScrollInterval = null;
 
     // --- State ---
     let pollInterval = null;
@@ -1229,26 +1236,68 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    if (exitFocusBtn) {
+        exitFocusBtn.addEventListener('click', () => {
+            isFocusMode = false;
+            document.body.classList.remove('focus-mode');
+            focusModeBtn.style.color = '';
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+                autoScrollBtn.style.color = '';
+            }
+        });
+    }
+
+    if (autoScrollBtn) {
+        autoScrollBtn.addEventListener('click', () => {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+                autoScrollInterval = null;
+                autoScrollBtn.style.color = '';
+            } else {
+                autoScrollBtn.style.color = 'var(--accent-color)';
+                const scrollable = document.querySelector('.content-scrollable');
+                autoScrollInterval = setInterval(() => {
+                    if (scrollable) scrollable.scrollBy({ top: 1, behavior: 'auto' });
+                }, 40);
+            }
+        });
+    }
+
     
     if (ttsListenBtn) {
+        if (ttsSpeed && ttsSpeedLabel) {
+            ttsSpeed.addEventListener('input', () => {
+                ttsSpeedLabel.textContent = parseFloat(ttsSpeed.value).toFixed(1) + 'x';
+            });
+        }
+        
         ttsListenBtn.addEventListener('click', () => {
             if (isSpeaking) {
                 window.speechSynthesis.cancel();
                 isSpeaking = false;
                 ttsListenBtn.textContent = '🎧 Listen';
                 ttsListenBtn.style.color = '';
+                if (ttsControls) ttsControls.classList.add('hidden');
             } else {
                 if (!markdownContent.innerText) return;
                 const utterance = new SpeechSynthesisUtterance(markdownContent.innerText);
+                if (ttsSpeed) {
+                    utterance.rate = parseFloat(ttsSpeed.value);
+                }
                 utterance.onend = () => {
                     isSpeaking = false;
                     ttsListenBtn.textContent = '🎧 Listen';
                     ttsListenBtn.style.color = '';
+                    if (ttsControls) ttsControls.classList.add('hidden');
                 };
                 window.speechSynthesis.speak(utterance);
                 isSpeaking = true;
                 ttsListenBtn.textContent = '⏹ Stop';
                 ttsListenBtn.style.color = 'var(--error-text)';
+                if (ttsControls) ttsControls.classList.remove('hidden');
             }
         });
     }
