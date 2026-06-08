@@ -515,7 +515,7 @@ def generate_ai_abstract(article_text: str) -> str:
         summary = result['candidates'][0]['content']['parts'][0]['text']
         return f"\n> **🤖 AI Abstract:**\n> {summary.replace(chr(10), chr(10)+'> ')}\n\n---\n\n"
     except Exception as e:
-        log.warning("AI Summarization failed: %s", e)
+        print(f"AI Summarization failed: {e}", file=sys.stderr)
         return ""
 
 

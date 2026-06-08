@@ -148,6 +148,10 @@ def _record_failure(url: str, tag: str, reason: str) -> None:
         "timestamp": time.time()
     }
     _save_json(FAILED_FILE, failed)
+    if attempts >= MAX_ATTEMPTS:
+        log.warning(
+            "[failed] %s has failed %d times — marked permanently_failed.", url, attempts
+        )
 
 def _record_success(url: str, tag: str, filepath: str) -> None:
     """Append a success record in completed.json."""
@@ -160,10 +164,6 @@ def _record_success(url: str, tag: str, filepath: str) -> None:
         "date_str": datetime.now(timezone.utc).isoformat()
     })
     _save_json(COMPLETED_FILE, completed)
-    if attempts >= MAX_ATTEMPTS:
-        log.warning(
-            "[failed] %s has failed %d times — marked permanently_failed.", url, attempts
-        )
 
 
 async def _worker() -> None:
