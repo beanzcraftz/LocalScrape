@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const exitFocusBtn = document.getElementById('exit-focus-btn');
     const nextArticleBtn = document.getElementById('next-article-btn');
+    const nextArticleMainBtn = document.getElementById('next-article-main-btn');
     
     const librarySearch = document.getElementById('library-search');
     const tagSearch = document.getElementById('tag-search');
@@ -1383,6 +1384,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (nextArticleMainBtn) {
+        nextArticleMainBtn.addEventListener('click', () => {
+            if (nextArticleBtn) {
+                nextArticleBtn.click();
+            }
+        });
+    }
     
     if (ttsListenBtn) {
         if (ttsSpeed && ttsSpeedLabel) {
