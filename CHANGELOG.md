@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.2.0
+### New Features
+- **Resume Reading Tracker:** Added a persistent progress tracker that remembers your scroll position within an article and prompts you to seamlessly resume where you left off when reopening it.
+
 ## v2.1.5
 ### UI Enhancements
 - **iOS App Icon:** Updated the PWA manifest and generated new `apple-touch-icon` assets with a dark background to prevent iOS from automatically rendering transparent PNGs with an ugly white background.
