@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.1.1
+### UI Enhancements & Fixes
+- **Reader Navigation:** Added a "Next Article" button directly to the main Reader view header, allowing users to seamlessly skip through RSS feeds without returning to the library grid.
+- **Widescreen Layout:** Eliminated the horizontal scrollbar issue on the Info tabs and enforced a full-width layout for the main content wrappers.
+- **AI Cleanup:** Removed all legacy UI and backend references to the Gemini AI integration.
+
 ## v2.1.0
 ### Settings Dashboard & Dynamic Config
 - **Settings UI:** Added a dedicated Settings dashboard to manage RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies natively in the browser without editing JSON files.
