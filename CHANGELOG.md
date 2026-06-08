@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.4
+### UI Enhancements
+- **Activity Monitor:** Added "Clear All" buttons to both the Failed Jobs and Completed Jobs sections within the Activity Monitor, allowing users to wipe history logs on demand.
+
 ## v2.1.3
 ### Bug Fixes
 - **Reading Time Calculation:** Fixed a regex parsing bug on the backend where quoted reading times in markdown frontmatter caused the total reading time calculations on the library dashboard to incorrectly display as 0 minutes.
