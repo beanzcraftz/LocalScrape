@@ -898,11 +898,11 @@ textarea {
 /* Tab Bar (Info Page) */
 .tab-bar {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     padding: 0 1.5rem 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--bg-card);
-    overflow-x: auto;
 }
 
 .tab-btn {

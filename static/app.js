@@ -1705,8 +1705,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/settings');
             if (res.ok) {
                 const data = await res.json();
-                document.getElementById('setting-gemini-key').value = data.gemini_api_key || '';
-                document.getElementById('setting-auto-summarize').checked = !!data.auto_summarize;
+                // AI settings removed
                 document.getElementById('setting-rss-polling').value = data.rss_polling_interval || 2;
                 document.getElementById('setting-rss-retention').value = data.rss_retention_days || 5;
                 document.getElementById('setting-log-retention').value = data.log_retention_days || 10;
@@ -1758,8 +1757,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveSettingsBtn) {
         saveSettingsBtn.addEventListener('click', async () => {
             const payload = {
-                gemini_api_key: document.getElementById('setting-gemini-key').value,
-                auto_summarize: document.getElementById('setting-auto-summarize').checked,
+                // AI settings removed
                 rss_polling_interval: parseInt(document.getElementById('setting-rss-polling').value) || 2,
                 rss_retention_days: parseInt(document.getElementById('setting-rss-retention').value) || 5,
                 log_retention_days: parseInt(document.getElementById('setting-log-retention').value) || 10,

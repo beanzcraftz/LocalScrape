@@ -429,8 +429,7 @@ class ScrapeRequest(BaseModel):
         return v
 
 class SettingsPayload(BaseModel):
-    gemini_api_key: str = ""
-    auto_summarize: bool = False
+
     rss_polling_interval: int = 2
     rss_retention_days: int = 5
     log_retention_days: int = 10
