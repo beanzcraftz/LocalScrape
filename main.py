@@ -398,7 +398,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 app = FastAPI(
     title="LocalScrape API",
     description="Async article-scraping queue backed by archive.md + readability.",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
 )
 

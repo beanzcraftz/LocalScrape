@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.0
+### Settings Dashboard & Dynamic Config
+- **Settings UI:** Added a dedicated Settings dashboard to manage AI integrations, RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies natively in the browser without editing JSON files.
+- **Dynamic Configuration:** Backend jobs like APScheduler now dynamically read retentions and intervals from `settings.json`, automatically updating and rescheduling when changed.
+
 ## v2.0.0
 ### Major Features & UI/UX Overhaul
 - **Mobile PWA Enhancements:** Added Web Share Target API to accept URLs directly from mobile browser share sheets, and added swipe-left/swipe-right gestures to navigate between articles or return to the library.
