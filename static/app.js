@@ -747,7 +747,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     closeReaderBtn.addEventListener('click', () => {
-        switchView('library');
+        if (currentArticleTag) {
+            openTagView(currentArticleTag);
+        } else {
+            switchView('library');
+        }
         endOfArticle.classList.add('hidden');
         document.querySelectorAll('.article-item.active').forEach(el => el.classList.remove('active'));
     });
@@ -761,7 +765,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Article deleted');
                     loadTags();
                     loadStorage();
-                    switchView('library');
+                    if (currentArticleTag) {
+                        openTagView(currentArticleTag);
+                    } else {
+                        switchView('library');
+                    }
             } else {
                 alert('Failed to delete article.');
             }
@@ -798,7 +806,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await fetch(`/api/articles/${currentArticleTag}/${currentArticleFilename}`, { method: 'DELETE' });
                 if (res.ok) {
                     loadTags();
-                    switchView('library');
+                    if (currentArticleTag) {
+                        openTagView(currentArticleTag);
+                    } else {
+                        switchView('library');
+                    }
                 } else {
                     alert('Failed to delete article.');
                 }

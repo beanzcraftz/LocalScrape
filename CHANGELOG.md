@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.2
+### Bug Fixes
+- **Reader Navigation Fix:** Pressing "Back" or deleting an article from within the Reader View now correctly returns you to the current tag's folder view instead of dropping you all the way back to the main library grid.
+
 ## v2.1.1
 ### UI Enhancements & Fixes
 - **Reader Navigation:** Added a "Next Article" button directly to the main Reader view header, allowing users to seamlessly skip through RSS feeds without returning to the library grid.
