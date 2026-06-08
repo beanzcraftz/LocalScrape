@@ -284,6 +284,7 @@
                             
                             <p><strong>3. Power-User Features:</strong></p>
                             <ul style="padding-left:1.5rem; line-height:1.8;">
+                                <li><strong>AI Summarization:</strong> Create a <code>downloads/settings.json</code> file containing <code>{"gemini_api_key": "YOUR_KEY"}</code> to automatically generate 3-bullet abstracts at the top of newly scraped articles.</li>
                                 <li><strong>Megathreads:</strong> Select multiple articles using the checkboxes, then click the "Megathread" button to stitch them together into a single continuous digest.</li>
                                 <li><strong>Bionic Reading:</strong> Toggle the brain icon in the reader view to dynamically bold the first half of words, guiding your eyes for faster reading.</li>
                                 <li><strong>Teleprompter:</strong> Activate auto-scroll from the reader controls for hands-free reading.</li>
@@ -299,6 +300,15 @@
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog</h3>
+                            <h4>v2.0.0</h4>
+                            <ul>
+                                <li><strong>Mobile PWA Enhancements:</strong> Added Web Share Target API to accept URLs directly from mobile browser share sheets, and swipe gestures to navigate between articles or return to the library.</li>
+                                <li><strong>Reading Power-Ups:</strong> Introduced a Read/Unread state tracker that highlights unread articles, Bionic Reading Mode for improved focus, and a customizable Teleprompter auto-scroll.</li>
+                                <li><strong>Bulk Data Utilities:</strong> Added a multi-select batch actions floating panel to mark items read/unread, delete them, or seamlessly compile them into a new Megathread digest.</li>
+                                <li><strong>Library Data Analysis:</strong> A new interactive info tab detailing storage footprints, read ratios, and estimated total reading time aggregations dynamically overlaid across the dashboard tiles.</li>
+                                <li><strong>Gemini AI Integration:</strong> Abstract summarization is now automatically prepended to incoming markdown files when an API key is present in your local config.</li>
+                                <li><strong>Canonical Duplication Safeguard:</strong> Backend instantly filters duplicate URLs against historical completion logs to drastically improve queue efficiency.</li>
+                            </ul>
                             <h4>v1.7.2</h4>
                             <ul>
                                 <li><strong>Sidebar Navigation Fix:</strong> Clicking a tag in the sidebar now also seamlessly opens the same full collection view in the main window as clicking it from the Dashboard grid.</li>
