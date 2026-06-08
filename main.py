@@ -999,6 +999,12 @@ async def delete_activity_failed(url: str):
         _save_json(FAILED_FILE, failed)
     return {"status": "deleted", "url": url}
 
+@app.delete("/api/activity/failed/all")
+async def clear_activity_failed():
+    """Clear all failed job records."""
+    _save_json(FAILED_FILE, {})
+    return {"status": "cleared"}
+
 @app.delete("/api/activity/completed")
 async def delete_activity_completed(url: str):
     """Remove a single completed job log record."""
@@ -1007,6 +1013,12 @@ async def delete_activity_completed(url: str):
     if len(new_completed) != len(completed):
         _save_json(COMPLETED_FILE, new_completed)
     return {"status": "deleted", "url": url}
+
+@app.delete("/api/activity/completed/all")
+async def clear_activity_completed():
+    """Clear all completed job records."""
+    _save_json(COMPLETED_FILE, [])
+    return {"status": "cleared"}
 
 
 @app.post("/api/failed/retry", status_code=202)

@@ -108,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const emptyStateDashboardBtn = document.getElementById('empty-state-dashboard-btn');
     const refreshActivityBtn = document.getElementById('refresh-activity-btn');
+    const clearFailedBtn = document.getElementById('clear-failed-btn');
+    const clearCompletedBtn = document.getElementById('clear-completed-btn');
     const logsContent = document.getElementById('logs-content');
     
     const renameArticleBtn = document.getElementById('rename-article-btn');
@@ -1239,6 +1241,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     refreshActivityBtn.addEventListener('click', loadActivityMonitor);
+
+    if (clearFailedBtn) {
+        clearFailedBtn.addEventListener('click', async () => {
+            if (confirm("Clear all failed jobs?")) {
+                try {
+                    await fetch('/api/activity/failed/all', { method: 'DELETE' });
+                    loadActivityMonitor();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        });
+    }
+
+    if (clearCompletedBtn) {
+        clearCompletedBtn.addEventListener('click', async () => {
+            if (confirm("Clear all completed jobs?")) {
+                try {
+                    await fetch('/api/activity/completed/all', { method: 'DELETE' });
+                    loadActivityMonitor();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        });
+    }
 
     // --- Info Tabs ---
     const analysisTableBody = document.getElementById('analysis-table-body');

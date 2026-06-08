@@ -191,12 +191,18 @@
                         <button id="refresh-activity-btn" class="btn secondary-btn">Refresh</button>
                     </div>
                     <div class="card-body">
-                        <h3>Failed Jobs</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0;">Failed Jobs</h3>
+                            <button id="clear-failed-btn" class="btn danger-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Clear All</button>
+                        </div>
                         <ul id="failed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem; margin-bottom: 2rem;">
                             <!-- Failed jobs injected via JS -->
                         </ul>
                         
-                        <h3>Completed Jobs</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <h3 style="margin: 0;">Completed Jobs</h3>
+                            <button id="clear-completed-btn" class="btn danger-btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Clear All</button>
+                        </div>
                         <ul id="completed-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem; margin-bottom: 2rem;">
                             <!-- Completed jobs injected via JS -->
                         </ul>
