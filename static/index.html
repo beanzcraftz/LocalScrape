@@ -265,37 +265,26 @@
                                 <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
                             </div>
                             
-                            <h4 style="margin-top:1.25rem;">📡 RSS Feeds — Step by Step</h4>
-                            <ol style="padding-left:1.5rem; line-height:1.8;">
-                                <li>Go to <strong>RSS Feeds</strong> in the sidebar.</li>
-                                <li>Paste an RSS/Atom feed URL (e.g. <code>https://techcrunch.com/feed/</code>).</li>
-                                <li>Assign a <strong>Tag</strong> — this is the folder articles will be saved to.</li>
-                                <li><strong>Keywords</strong> (optional, comma-separated) — only articles whose title or summary contains <em>any</em> of these words will be scraped. Leave blank to pull <em>everything</em> in the feed.</li>
-                                <li>Click <strong>"Add Feed"</strong> to save it.</li>
-                                <li>Click <strong>"Fetch Now"</strong> to immediately pull articles, or wait for the automatic 2-hour polling cycle.</li>
-                            </ol>
-                            <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
-                                <strong>💡 How many articles will it pull?</strong><br>
-                                RSS feeds typically contain only the <strong>10–50 most recent</strong> articles published by a website — not their entire catalogue. On your first "Fetch Now", you may get up to ~50 articles (depending on the site). After that, subsequent fetches will only pull <em>brand-new</em> articles that weren't there before. LocalScrape automatically skips articles it has already downloaded.<br><br>
-                                <strong>💡 Automated Cleanup</strong><br>
-                                To prevent your storage from filling up with thousands of unread articles, a background cleanup job automatically deletes RSS articles that are older than <strong>5 days</strong>.<br><br>
-                                <strong>💡 What if I leave keywords blank?</strong><br>
-                                Every article in the feed will be scraped. Use keywords to filter only what you care about (e.g. <code>AI, machine learning</code> will only scrape articles mentioning either term).
-                            </div>
-                            
-                            <p><strong>3. Power-User Features:</strong></p>
+                            <h4 style="margin-top:1.25rem;">📡 RSS Feeds & Settings Dashboard</h4>
+                            <p>Manage background automation and system preferences seamlessly using the <strong>⚙️ Settings</strong> dashboard in the sidebar:</p>
                             <ul style="padding-left:1.5rem; line-height:1.8;">
-                                <li><strong>AI Summarization:</strong> Create a <code>downloads/settings.json</code> file containing <code>{"gemini_api_key": "YOUR_KEY"}</code> to automatically generate 3-bullet abstracts at the top of newly scraped articles.</li>
-                                <li><strong>Megathreads:</strong> Select multiple articles using the checkboxes, then click the "Megathread" button to stitch them together into a single continuous digest.</li>
-                                <li><strong>Bionic Reading:</strong> Toggle the brain icon in the reader view to dynamically bold the first half of words, guiding your eyes for faster reading.</li>
-                                <li><strong>Teleprompter:</strong> Activate auto-scroll from the reader controls for hands-free reading.</li>
+                                <li><strong>RSS Feeds:</strong> Add feeds via the "RSS Feeds" sidebar. The system will poll automatically based on your <em>RSS Polling Interval</em> setting.</li>
+                                <li><strong>Retention Policy:</strong> The Settings dashboard allows you to define strict retention spans (in days) for older RSS articles and system log histories to prevent storage bloat.</li>
+                                <li><strong>UI & TTS Defaults:</strong> Customize your reading experience globally. Select a default theme, typography, font size, and native Text-to-Speech (TTS) voice and speed preferences.</li>
+                                <li><strong>Global Cookies:</strong> Inject your Netscape-formatted <code>cookies.txt</code> safely into the Scraping Engine directly from the UI to bypass soft paywalls.</li>
                             </ul>
                             
-                            <p style="margin-top:1.25rem;"><strong>4. Activity Monitor:</strong> The Activity Monitor displays real-time backend logs and a 10-day history of successfully completed or failed jobs.</p>
-                            <p><strong>4. Viewing:</strong> Click on a tag in Your Library or Dashboard to expand it. You can instantly filter articles using the Search Bar. Click on an article to open the Reader View. Use the top bar to adjust text size or toggle themes.</p>
-                            <p><strong>5. Reader Tools:</strong> Inside the Reader View, use the action buttons to <strong>👓 Focus</strong> (hide distractions), <strong>🎧 Listen</strong> (text-to-speech with speed controls), or <strong>★ Favorite</strong> the article to pin it to your Library grid. You can also export articles as Markdown using the <strong>⬇️ Download</strong> button, or hit `Ctrl+P` to save a clean PDF.</p>
-                            <p><strong>6. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading. You can also download a zip of your entire library using the <strong>Backup Data</strong> button in the sidebar.</p>
-                            <p><strong>7. Storage & Performance:</strong> The 💾 counter in the top-right header shows total library size. If it exceeds 500MB, it will turn red as a warning. As a Progressive Web App (PWA), you can also "Add to Homescreen" on mobile devices for a native app experience!</p>
+                            <p style="margin-top:1.25rem;"><strong>3. Multi-Select Batch Actions & Megathreads:</strong></p>
+                            <p>Inside any Tag or Library view, you can check the box next to multiple articles to spawn a floating Action Panel. From there, you can mark them all as Read/Unread, Delete them simultaneously, or click <strong>🧵 Megathread</strong> to stitch them together into a single, continuous reading digest.</p>
+                            
+                            <p style="margin-top:1.25rem;"><strong>4. Reader Power-Ups:</strong></p>
+                            <ul style="padding-left:1.5rem; line-height:1.8;">
+                                <li><strong>Bionic Reading:</strong> Toggle the brain icon in the reader view to dynamically bold the first half of words, guiding your eyes for faster reading.</li>
+                                <li><strong>Teleprompter:</strong> Activate auto-scroll from the reader controls for hands-free reading.</li>
+                                <li><strong>Web Share Target (Mobile PWA):</strong> "Add to Homescreen" on your phone to install the Progressive Web App. You can then use your OS's native "Share" sheet to instantly push URLs from your mobile browser straight into LocalScrape's queue!</li>
+                            </ul>
+                            
+                            <p style="margin-top:1.25rem;"><strong>5. Activity Monitor & Data Analysis:</strong> Track background queue statuses, job failures (up to 3 retries), and log outputs via the Activity Monitor. Review library footprints, read ratios, and total reading time aggregations dynamically overlaid across the dashboard tiles in the "Data Analysis" tab.</p>
                         </div>
                         
                         <!-- Changelog Tab -->
@@ -303,7 +292,7 @@
                             <h3>Changelog</h3>
                             <h4>v2.1.0</h4>
                             <ul>
-                                <li><strong>Settings Dashboard:</strong> Added a dedicated Settings UI to manage AI integrations, RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies in the browser without editing JSON files.</li>
+                                <li><strong>Settings Dashboard:</strong> Added a dedicated Settings UI to manage RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies in the browser without editing JSON files.</li>
                                 <li><strong>Dynamic Configuration:</strong> Backend jobs (APScheduler) now dynamically read retentions and intervals from configuration, automatically rescheduling without restarting the container.</li>
                             </ul>
                             <h4>v2.0.0</h4>
@@ -312,7 +301,6 @@
                                 <li><strong>Reading Power-Ups:</strong> Introduced a Read/Unread state tracker that highlights unread articles, Bionic Reading Mode for improved focus, and a customizable Teleprompter auto-scroll.</li>
                                 <li><strong>Bulk Data Utilities:</strong> Added a multi-select batch actions floating panel to mark items read/unread, delete them, or seamlessly compile them into a new Megathread digest.</li>
                                 <li><strong>Library Data Analysis:</strong> A new interactive info tab detailing storage footprints, read ratios, and estimated total reading time aggregations dynamically overlaid across the dashboard tiles.</li>
-                                <li><strong>Gemini AI Integration:</strong> Abstract summarization is now automatically prepended to incoming markdown files when an API key is present in your local config.</li>
                                 <li><strong>Canonical Duplication Safeguard:</strong> Backend instantly filters duplicate URLs against historical completion logs to drastically improve queue efficiency.</li>
                             </ul>
                             <h4>v1.7.2</h4>

@@ -2,7 +2,7 @@
 
 ## v2.1.0
 ### Settings Dashboard & Dynamic Config
-- **Settings UI:** Added a dedicated Settings dashboard to manage AI integrations, RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies natively in the browser without editing JSON files.
+- **Settings UI:** Added a dedicated Settings dashboard to manage RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies natively in the browser without editing JSON files.
 - **Dynamic Configuration:** Backend jobs like APScheduler now dynamically read retentions and intervals from `settings.json`, automatically updating and rescheduling when changed.
 
 ## v2.0.0
@@ -11,7 +11,6 @@
 - **Reading Power-Ups:** Introduced a Read/Unread state tracker that persists locally and highlights unread articles, Bionic Reading Mode for improved focus, and a customizable Teleprompter auto-scroll.
 - **Bulk Data Utilities:** Added a multi-select batch actions floating panel to mark items read/unread, delete them, or seamlessly compile them into a new Megathread digest.
 - **Library Data Analysis:** A new interactive info tab detailing storage footprints, read ratios, and estimated total reading time aggregations dynamically overlaid across the dashboard tiles.
-- **Gemini AI Integration:** Abstract summarization is now automatically prepended to incoming markdown files when an API key is present in your local config.
 - **Canonical Duplication Safeguard:** Backend instantly filters duplicate URLs against historical completion logs to drastically improve queue efficiency.
 
 ## v1.7.2

@@ -218,6 +218,10 @@
     padding: 0;
 }
 
+html {
+    overflow-x: hidden;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-main);
@@ -225,6 +229,7 @@ body {
     transition: var(--transition);
     height: 100dvh;
     overflow: hidden;
+    overflow-x: hidden;
 }
 
 .app-layout {
@@ -511,7 +516,9 @@ body.resizing {
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--shadow-sm);
-    max-width: 800px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto 2rem auto;
     overflow: hidden;
 }
@@ -939,7 +946,9 @@ textarea {
 
 /* ===== LIBRARY TILES VIEW ===== */
 .library-view {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
 }
 
@@ -1037,7 +1046,9 @@ textarea {
 
 /* ===== TAG ARTICLES VIEW ===== */
 .tag-articles-view {
-    max-width: 1000px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     margin: 0 auto;
 }
 
