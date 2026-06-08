@@ -726,11 +726,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Failed to load reading progress:", err);
             }
             
-            // Scroll detection: show delete prompt when near the bottom & update progress bar
             const scrollContainer = readerView.closest('.content-scrollable');
             if (scrollContainer) {
                 let progressTimer = null;
                 const onScroll = () => {
+                    if (readerView.classList.contains('hidden')) return;
+                    
                     const scrollBottom = scrollContainer.scrollTop + scrollContainer.clientHeight;
                     const totalHeight = scrollContainer.scrollHeight;
                     
@@ -757,9 +758,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Debounced Progress Save
                     clearTimeout(progressTimer);
+                    
+                    // Capture exact positions right now, not inside the async timeout
+                    const currentScrollTop = Math.floor(scrollContainer.scrollTop);
+                    const currentScrollBottom = scrollBottom;
+                    const currentTotalHeight = totalHeight;
+                    
                     progressTimer = setTimeout(() => {
-                        let positionToSave = Math.floor(scrollContainer.scrollTop);
-                        if (scrollBottom >= totalHeight - 350) {
+                        let positionToSave = currentScrollTop;
+                        if (currentScrollBottom >= currentTotalHeight - 350) {
                             positionToSave = 0; // Reset progress when finished
                         }
                         
