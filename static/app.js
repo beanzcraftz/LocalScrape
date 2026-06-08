@@ -135,6 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const readerMenuDropdown = document.getElementById('reader-menu-dropdown');
     
     const exitFocusBtn = document.getElementById('exit-focus-btn');
+    const resumePrompt = document.getElementById('resume-prompt');
+    const resumeYesBtn = document.getElementById('resume-yes-btn');
+    const resumeNoBtn = document.getElementById('resume-no-btn');
     const nextArticleBtn = document.getElementById('next-article-btn');
     const nextArticleMainBtn = document.getElementById('next-article-main-btn');
     
@@ -697,12 +700,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
             markdownContent.innerHTML = metaHtml + marked.parse(body);
             
+            // Fetch progress and show prompt if resuming
+            try {
+                const progRes = await fetch('/api/progress');
+                if (progRes.ok) {
+                    const progressData = await progRes.json();
+                    const savedPos = progressData[path];
+                    if (savedPos && savedPos > 0) {
+                        resumePrompt.classList.remove('hidden');
+                        
+                        // Action listeners
+                        resumeYesBtn.onclick = () => {
+                            const scrollContainer = readerView.closest('.content-scrollable');
+                            if (scrollContainer) {
+                                scrollContainer.scrollTo({ top: savedPos, behavior: 'smooth' });
+                            }
+                            resumePrompt.classList.add('hidden');
+                        };
+                        resumeNoBtn.onclick = () => {
+                            resumePrompt.classList.add('hidden');
+                        };
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load reading progress:", err);
+            }
+            
             // Scroll detection: show delete prompt when near the bottom & update progress bar
             const scrollContainer = readerView.closest('.content-scrollable');
             if (scrollContainer) {
+                let progressTimer = null;
                 const onScroll = () => {
                     const scrollBottom = scrollContainer.scrollTop + scrollContainer.clientHeight;
                     const totalHeight = scrollContainer.scrollHeight;
+                    
+                    // Hide resume prompt on manual scroll
+                    if (resumePrompt && !resumePrompt.classList.contains('hidden')) {
+                        resumePrompt.classList.add('hidden');
+                    }
                     
                     // Update Progress Bar
                     if (readingProgress) {
@@ -719,6 +754,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         endOfArticle.classList.add('hidden');
                     }
+                    
+                    // Debounced Progress Save
+                    clearTimeout(progressTimer);
+                    progressTimer = setTimeout(() => {
+                        let positionToSave = Math.floor(scrollContainer.scrollTop);
+                        if (scrollBottom >= totalHeight - 350) {
+                            positionToSave = 0; // Reset progress when finished
+                        }
+                        
+                        fetch('/api/progress', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: path, position: positionToSave })
+                        }).catch(console.error);
+                    }, 1000);
                 };
                 // Ensure no duplicate listeners if opened multiple times
                 scrollContainer.onscroll = onScroll;

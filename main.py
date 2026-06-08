@@ -573,10 +573,15 @@ async def queue_status() -> QueueResponse:
 # ---------------------------------------------------------------------------
 
 READ_STATE_FILE = BASE / "read_state.json"
+PROGRESS_FILE = BASE / "progress.json"
 
 class ReadStateRequest(BaseModel):
     path: str
     read: bool
+
+class ProgressRequest(BaseModel):
+    path: str
+    position: int
 
 @app.get("/api/read-state")
 async def get_read_state():
@@ -600,6 +605,35 @@ async def update_read_state(body: ReadStateRequest):
     state[body.path] = body.read
     _save_json(READ_STATE_FILE, state)
     return {"status": "ok", "state": state}
+
+@app.get("/api/progress")
+async def get_progress():
+    if not PROGRESS_FILE.exists():
+        return {}
+    try:
+        with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+@app.post("/api/progress")
+async def update_progress(body: ProgressRequest):
+    state = {}
+    if PROGRESS_FILE.exists():
+        try:
+            with open(PROGRESS_FILE, "r", encoding="utf-8") as f:
+                state = json.load(f)
+        except Exception:
+            pass
+            
+    if body.position <= 0:
+        if body.path in state:
+            del state[body.path]
+    else:
+        state[body.path] = body.position
+        
+    _save_json(PROGRESS_FILE, state)
+    return {"status": "ok"}
 
 
 class FavoriteRequest(BaseModel):
