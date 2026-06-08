@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.0
+### Major Features & UI/UX Overhaul
+- **Mobile PWA Enhancements:** Added Web Share Target API to accept URLs directly from mobile browser share sheets, and added swipe-left/swipe-right gestures to navigate between articles or return to the library.
+- **Reading Power-Ups:** Introduced a Read/Unread state tracker that persists locally and highlights unread articles, Bionic Reading Mode for improved focus, and a customizable Teleprompter auto-scroll.
+- **Bulk Data Utilities:** Added a multi-select batch actions floating panel to mark items read/unread, delete them, or seamlessly compile them into a new Megathread digest.
+- **Library Data Analysis:** A new interactive info tab detailing storage footprints, read ratios, and estimated total reading time aggregations dynamically overlaid across the dashboard tiles.
+- **Gemini AI Integration:** Abstract summarization is now automatically prepended to incoming markdown files when an API key is present in your local config.
+- **Canonical Duplication Safeguard:** Backend instantly filters duplicate URLs against historical completion logs to drastically improve queue efficiency.
+
 ## v1.7.2
 ### Bug Fixes
 - **Sidebar Navigation:** Fixed an issue where clicking a tag in the sidebar with 0 articles would force an empty state view, while clicking a tag with articles would only expand the sidebar accordion without updating the central view. Now, clicking any tag in the sidebar perfectly mirrors the behavior of clicking it in the Dashboard grid.

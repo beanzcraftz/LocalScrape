@@ -1,4 +1,4 @@
-const CACHE_NAME = 'localscrape-v1.7.2';
+const CACHE_NAME = 'localscrape-v2.0.0';
 const ASSETS = [
   '/',
   '/static/index.html',

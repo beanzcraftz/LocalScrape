@@ -121,6 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const favoriteArticleBtn = document.getElementById('favorite-article-btn');
     const navBackupBtn = document.getElementById('nav-backup-btn');
     
+    const bionicModeBtn = document.getElementById('bionic-mode-btn');
+    const teleprompterBtn = document.getElementById('teleprompter-btn');
+    const teleprompterControls = document.getElementById('teleprompter-controls');
+    const teleprompterPlayBtn = document.getElementById('teleprompter-play-btn');
+    const teleprompterSpeed = document.getElementById('teleprompter-speed');
+    
     const exitFocusBtn = document.getElementById('exit-focus-btn');
     const nextArticleBtn = document.getElementById('next-article-btn');
     
@@ -134,10 +140,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastContainer = document.getElementById('toast-container');
     const sidebarResizer = document.getElementById('sidebar-resizer');
 
+    const batchPanel = document.getElementById('batch-actions-panel');
+    const batchCount = document.getElementById('batch-count');
+    const batchReadBtn = document.getElementById('batch-read-btn');
+    const batchUnreadBtn = document.getElementById('batch-unread-btn');
+    const batchMegathreadBtn = document.getElementById('batch-megathread-btn');
+    const batchDeleteBtn = document.getElementById('batch-delete-btn');
+    const batchCancelBtn = document.getElementById('batch-cancel-btn');
+
     let currentArticleTag = null;
     let currentArticleFilename = null;
     let currentArticleRaw = null;
     let favoritesList = [];
+    let readStates = {};
     let isSpeaking = false;
     let isFocusMode = false;
     let currentArticleQueue = [];
@@ -251,13 +266,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const card = document.createElement('div');
             card.className = 'article-card';
+            if (!readStates[path]) {
+                card.classList.add('unread-bold');
+            } else {
+                card.classList.add('read-muted');
+            }
             card.innerHTML = `
+                <input type="checkbox" class="article-checkbox" data-path="${path}" style="margin-right:0.5rem; width:1.2rem; height:1.2rem; cursor:pointer;">
                 <div class="article-card-icon">★</div>
-                <div style="display:flex; flex-direction:column; justify-content:center;">
+                <div style="display:flex; flex-direction:column; justify-content:center; flex-grow:1;">
                     <div class="article-card-name">${filename.replace('.md', '')}</div>
                     <span class="article-date">${tag}</span>
                 </div>
             `;
+            
+            const checkbox = card.querySelector('.article-checkbox');
+            checkbox.checked = selectedArticles.has(path);
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) selectedArticles.add(path);
+                else selectedArticles.delete(path);
+                updateBatchPanel();
+            });
+            checkbox.addEventListener('click', e => e.stopPropagation());
+            
             card.addEventListener('click', () => openArticle(tag, filename));
             tagArticlesList.appendChild(card);
         });
@@ -484,7 +515,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tilesContainer.innerHTML = '<p style="color:var(--text-muted)">Loading your library...</p>';
         
         try {
-            const res = await fetch('/api/tags?t=' + Date.now(), { cache: "no-store" });
+            const res = await fetch('/api/analysis?t=' + Date.now(), { cache: "no-store" });
             const data = await res.json();
             
             tilesContainer.innerHTML = '';
@@ -500,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
             favTile.addEventListener('click', openFavoritesView);
             tilesContainer.appendChild(favTile);
             
-            if (data.tags.length === 0 && favoritesList.length === 0) {
+            if (data.analysis.length === 0 && favoritesList.length === 0) {
                 tilesContainer.innerHTML = `
                     <div class="library-empty">
                         <div class="empty-icon">\ud83d\udced</div>
@@ -511,28 +542,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            // Fetch article counts for each tag in parallel
-            const countPromises = data.tags.map(async tag => {
-                try {
-                    const r = await fetch(`/api/articles/${tag}`);
-                    const d = await r.json();
-                    return { tag, count: d.articles ? d.articles.length : 0 };
-                } catch {
-                    return { tag, count: 0 };
-                }
-            });
-            
-            const tagCounts = await Promise.all(countPromises);
-            
-            tagCounts.forEach(({ tag, count }) => {
+            data.analysis.forEach(item => {
+                const count = item.total_assets;
                 const tile = document.createElement('div');
                 tile.className = 'tag-tile';
+                if (item.total_pending > 0) {
+                    tile.classList.add('unread-highlight');
+                }
                 tile.innerHTML = `
                     <div class="tag-tile-icon">\ud83d\udcc1</div>
-                    <div class="tag-tile-name">${tag}</div>
+                    <div class="tag-tile-name">${item.tag}</div>
                     <div class="tag-tile-count">${count} article${count !== 1 ? 's' : ''}</div>
+                    <span class="metric-overlay">${item.total_pending} unread &bull; ~${item.total_read_time} min total</span>
                 `;
-                tile.addEventListener('click', () => openTagView(tag));
+                tile.addEventListener('click', () => openTagView(item.tag));
                 tilesContainer.appendChild(tile);
             });
             
@@ -569,14 +592,31 @@ document.addEventListener('DOMContentLoaded', () => {
             data.articles.forEach(article => {
                 const card = document.createElement('div');
                 card.className = 'article-card';
+                const pathKey = tag + '/' + article.filename;
+                if (!readStates[pathKey]) {
+                    card.classList.add('unread-bold');
+                } else {
+                    card.classList.add('read-muted');
+                }
                 const dateStr = new Date(article.added_at * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                 card.innerHTML = `
+                    <input type="checkbox" class="article-checkbox" data-path="${pathKey}" style="margin-right:0.5rem; width:1.2rem; height:1.2rem; cursor:pointer;">
                     <div class="article-card-icon">\ud83d\udcc4</div>
-                    <div style="display:flex; flex-direction:column; justify-content:center;">
+                    <div style="display:flex; flex-direction:column; justify-content:center; flex-grow:1;">
                         <div class="article-card-name">${article.filename.replace('.md', '')}</div>
                         <span class="article-date">${dateStr}</span>
                     </div>
                 `;
+                
+                const checkbox = card.querySelector('.article-checkbox');
+                checkbox.checked = selectedArticles.has(pathKey);
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) selectedArticles.add(pathKey);
+                    else selectedArticles.delete(pathKey);
+                    updateBatchPanel();
+                });
+                checkbox.addEventListener('click', e => e.stopPropagation());
+                
                 card.addEventListener('click', () => openArticle(tag, article.filename));
                 tagArticlesList.appendChild(card);
             });
@@ -670,9 +710,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 scrollContainer.onscroll = onScroll;
             }
         } catch (err) {
-            console.error('Failed to load article content:', err);
-            markdownContent.innerHTML = `<p style="color: var(--error-text)">Error loading article content.</p>`;
+            console.error('Failed to load article:', err);
+            markdownContent.innerHTML = '<p style="color:var(--error-text)">Failed to load article content.</p>';
         }
+    }
+
+    // --- Read State Intersection Observer ---
+    const readerObserver = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && currentArticleTag && currentArticleFilename) {
+                const path = currentArticleTag + '/' + currentArticleFilename;
+                if (!readStates[path]) {
+                    fetch('/api/read-state', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: path, read: true })
+                    }).then(() => {
+                        readStates[path] = true;
+                    }).catch(err => console.error(err));
+                }
+            }
+        });
+    }, { threshold: 0.1 });
+    
+    if (endOfArticle) {
+        readerObserver.observe(endOfArticle);
     }
 
     closeReaderBtn.addEventListener('click', () => {
@@ -950,11 +1012,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/queue?t=' + Date.now(), { cache: "no-store" });
             const data = await res.json();
             
+            let favicon = document.querySelector("link[rel~='icon']");
+            if (!favicon) {
+                favicon = document.createElement('link');
+                favicon.rel = 'icon';
+                document.head.appendChild(favicon);
+            }
+            
             if (data.remaining > 0) {
                 queueStatus.classList.remove('hidden');
                 queueText.textContent = `Queue: ${data.remaining} item${data.remaining !== 1 ? 's' : ''}`;
+                document.title = `(${data.remaining}) LocalScrape`;
+                favicon.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23ef4444'/%3E%3Ccircle cx='50' cy='50' r='30' fill='%23ffffff'/%3E%3C/svg%3E";
             } else {
                 queueStatus.classList.add('hidden');
+                document.title = 'LocalScrape Dashboard';
+                favicon.href = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230f172a'/%3E%3Cpath d='M25 20h50v60H25z' fill='none' stroke='%233b82f6' stroke-width='4' rx='3'/%3E%3Cpath d='M35 35h30M35 47h30M35 59h20' stroke='%2360a5fa' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M65 65l10 10' stroke='%2300ff88' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E";
                 
                 // Show toast if queue just finished
                 if (previousQueueCount > 0) {
@@ -1147,6 +1220,35 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshActivityBtn.addEventListener('click', loadActivityMonitor);
 
     // --- Info Tabs ---
+    const analysisTableBody = document.getElementById('analysis-table-body');
+    async function loadAnalysisTable() {
+        if (!analysisTableBody) return;
+        analysisTableBody.innerHTML = '<tr><td colspan="5" style="padding:1rem;">Loading analysis...</td></tr>';
+        try {
+            const res = await fetch('/api/analysis?t=' + Date.now(), { cache: "no-store" });
+            const data = await res.json();
+            analysisTableBody.innerHTML = '';
+            if (data.analysis.length === 0) {
+                analysisTableBody.innerHTML = '<tr><td colspan="5" style="padding:1rem;">No data available.</td></tr>';
+                return;
+            }
+            data.analysis.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                tr.innerHTML = `
+                    <td style="padding:0.75rem;">${item.tag}</td>
+                    <td style="padding:0.75rem;">${item.total_assets}</td>
+                    <td style="padding:0.75rem;">${item.total_read}</td>
+                    <td style="padding:0.75rem;">${item.total_pending}</td>
+                    <td style="padding:0.75rem;">${item.size_mb} MB</td>
+                `;
+                analysisTableBody.appendChild(tr);
+            });
+        } catch (e) {
+            analysisTableBody.innerHTML = '<tr><td colspan="5" style="padding:1rem;color:var(--error-text);">Failed to load analysis.</td></tr>';
+        }
+    }
+
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             // Remove active from all buttons
@@ -1159,7 +1261,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Show target tab content
             const targetId = 'tab-' + e.target.getAttribute('data-tab');
-            document.getElementById(targetId).classList.remove('hidden');
+            const targetEl = document.getElementById(targetId);
+            if (targetEl) {
+                targetEl.classList.remove('hidden');
+                if (targetId === 'tab-data-analysis') {
+                    loadAnalysisTable();
+                }
+            }
         });
     });
 
@@ -1343,6 +1451,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Bionic Reading Mode ---
+    let isBionicActive = false;
+    if (bionicModeBtn) {
+        bionicModeBtn.addEventListener('click', () => {
+            if (!currentArticleRaw) return;
+            isBionicActive = !isBionicActive;
+            if (isBionicActive) {
+                bionicModeBtn.style.color = 'var(--accent-color)';
+                const words = markdownContent.innerHTML.split(/(<[^>]+>|\s+)/);
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    // Avoid modifying HTML tags or pure whitespace
+                    if (word && !word.startsWith('<') && word.trim().length > 0) {
+                        const mid = Math.ceil(word.length / 2);
+                        words[i] = `<b>${word.slice(0, mid)}</b>${word.slice(mid)}`;
+                    }
+                }
+                markdownContent.innerHTML = words.join('');
+            } else {
+                bionicModeBtn.style.color = '';
+                markdownContent.innerHTML = marked.parse(currentArticleRaw);
+            }
+        });
+    }
+
+    // --- Teleprompter Mode Auto-Scroll ---
+    let teleprompterActive = false;
+    let teleprompterFrame = null;
+    if (teleprompterBtn) {
+        teleprompterBtn.addEventListener('click', () => {
+            if (teleprompterControls.classList.contains('hidden')) {
+                teleprompterControls.classList.remove('hidden');
+                teleprompterBtn.style.color = 'var(--accent-color)';
+            } else {
+                teleprompterControls.classList.add('hidden');
+                teleprompterBtn.style.color = '';
+                cancelAnimationFrame(teleprompterFrame);
+                teleprompterActive = false;
+                teleprompterPlayBtn.textContent = '▶️';
+            }
+        });
+        
+        teleprompterPlayBtn.addEventListener('click', () => {
+            teleprompterActive = !teleprompterActive;
+            teleprompterPlayBtn.textContent = teleprompterActive ? '⏸️' : '▶️';
+            if (teleprompterActive) {
+                function scrollStep() {
+                    if (!teleprompterActive) return;
+                    const speed = parseInt(teleprompterSpeed.value, 10);
+                    // scroll by a fraction for smoothness
+                    window.scrollBy(0, speed / 2);
+                    teleprompterFrame = requestAnimationFrame(scrollStep);
+                }
+                teleprompterFrame = requestAnimationFrame(scrollStep);
+            } else {
+                cancelAnimationFrame(teleprompterFrame);
+            }
+        });
+    }
+
     // --- Service Worker ---
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -1352,10 +1520,185 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Web Share Target Interceptor ---
+    function handleSharedURLs() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sharedUrl = urlParams.get('url') || urlParams.get('text');
+
+        if (sharedUrl && sharedUrl.startsWith('http')) {
+            if (navDashboardBtn) navDashboardBtn.click(); 
+            if (urlsInput) urlsInput.value = sharedUrl;
+            window.history.replaceState({}, document.title, "/");
+            showToast("🔗 URL caught from share sheet!");
+        }
+    }
+
+    // --- Swipe Gestures in Reader ---
+    let touchstartX = 0;
+    let touchendX = 0;
+    const swipeThreshold = 50;
+
+    readerView.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+    }, {passive: true});
+
+    readerView.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, {passive: true});
+
+    function handleSwipe() {
+        if (touchendX < touchstartX - swipeThreshold) {
+            // Swiped left -> Next article
+            if (nextArticleBtn) nextArticleBtn.click();
+        } else if (touchendX > touchstartX + swipeThreshold) {
+            // Swiped right -> Back to library
+            if (closeReaderBtn) closeReaderBtn.click();
+        }
+    }
+
+    // --- Offline Detection ---
+    const offlinePill = document.getElementById('offline-pill');
+    function updateOnlineStatus() {
+        if (offlinePill) {
+            if (navigator.onLine) {
+                offlinePill.classList.add('hidden');
+            } else {
+                offlinePill.classList.remove('hidden');
+                showToast("You are offline.");
+            }
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    async function loadReadStates() {
+        try {
+            const res = await fetch('/api/read-state');
+            readStates = await res.json();
+        } catch (e) {
+            readStates = {};
+        }
+    }
+
+    // --- Batch Actions ---
+    let selectedArticles = new Set();
+    function updateBatchPanel() {
+        if (!batchPanel) return;
+        if (selectedArticles.size > 0) {
+            batchPanel.classList.remove('hidden');
+            batchCount.textContent = `${selectedArticles.size} selected`;
+        } else {
+            batchPanel.classList.add('hidden');
+        }
+    }
+
+    if (batchCancelBtn) {
+        batchCancelBtn.addEventListener('click', () => {
+            selectedArticles.clear();
+            updateBatchPanel();
+            if (currentArticleTag) {
+                loadArticles(currentArticleTag, tagArticlesList);
+            } else {
+                openFavoritesView();
+            }
+        });
+    }
+
+    if (batchReadBtn) {
+        batchReadBtn.addEventListener('click', async () => {
+            for (let path of selectedArticles) {
+                await fetch('/api/read-state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: path, read: true })
+                });
+            }
+            await loadReadStates();
+            selectedArticles.clear();
+            updateBatchPanel();
+            if (currentArticleTag) loadArticles(currentArticleTag, tagArticlesList);
+            else openFavoritesView();
+        });
+    }
+
+    if (batchUnreadBtn) {
+        batchUnreadBtn.addEventListener('click', async () => {
+            for (let path of selectedArticles) {
+                await fetch('/api/read-state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: path, read: false })
+                });
+            }
+            await loadReadStates();
+            selectedArticles.clear();
+            updateBatchPanel();
+            if (currentArticleTag) loadArticles(currentArticleTag, tagArticlesList);
+            else openFavoritesView();
+        });
+    }
+    
+    if (batchDeleteBtn) {
+        batchDeleteBtn.addEventListener('click', async () => {
+            if (confirm(`Delete ${selectedArticles.size} selected articles?`)) {
+                for (let path of selectedArticles) {
+                    const [tag, fname] = path.split('/');
+                    await fetch(`/api/articles/${tag}/${fname}`, { method: 'DELETE' });
+                }
+                showToast(`Deleted ${selectedArticles.size} articles.`);
+                selectedArticles.clear();
+                updateBatchPanel();
+                if (currentArticleTag) loadArticles(currentArticleTag, tagArticlesList);
+                else openFavoritesView();
+            }
+        });
+    }
+
+    if (batchMegathreadBtn) {
+        batchMegathreadBtn.addEventListener('click', async () => {
+            const title = prompt("Enter a title for your Megathread:", "Compiled Megathread");
+            if (!title) return;
+            
+            const targetTag = prompt("Which tag should this Megathread belong to?", currentArticleTag || "mixed");
+            if (!targetTag) return;
+            
+            try {
+                const res = await fetch('/api/megathread', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: Array.from(selectedArticles),
+                        tag: targetTag,
+                        title: title
+                    })
+                });
+                
+                if (res.ok) {
+                    showToast("🧵 Megathread created successfully!");
+                    selectedArticles.clear();
+                    updateBatchPanel();
+                    if (currentArticleTag) loadArticles(currentArticleTag, tagArticlesList);
+                    else switchView('library');
+                    loadTags(); // refresh library grid
+                } else {
+                    const err = await res.json();
+                    showToast("Failed to create megathread: " + err.detail);
+                }
+            } catch (err) {
+                showToast("Network error creating megathread.");
+            }
+        });
+    }
+
     // --- Initialization ---
+    updateOnlineStatus();
+    handleSharedURLs();
     switchView('library');
     loadFavorites().then(() => {
-        loadTags();
+        loadReadStates().then(() => {
+            loadTags();
+        });
     });
     loadStorage();
     checkQueue(); // Check if anything is pending on initial load

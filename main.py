@@ -387,7 +387,7 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
 app = FastAPI(
     title="LocalScrape API",
     description="Async article-scraping queue backed by archive.md + readability.",
-    version="1.6.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -513,12 +513,29 @@ def _safe_child(parent: Path, *parts: str) -> Path:
 async def enqueue_scrape(body: ScrapeRequest) -> ScrapeResponse:
     """Accept a batch of URLs and a tag, place them on the queue, return immediately."""
     url_strings = [str(u) for u in body.urls]
+    
+    completed = _load_json(COMPLETED_FILE, [])
+    completed_urls = set(c.get("url") for c in completed)
+    failed = _load_json(FAILED_FILE, {})
+    
+    filtered_urls = []
     for url in url_strings:
+        if url in completed_urls:
+            log.warning("[api] Duplicate URL blocked: %s", url)
+            continue
+        if url in failed and failed[url].get("status") == "permanently_failed":
+            continue
+        filtered_urls.append(url)
+        
+    if not filtered_urls and url_strings:
+        raise HTTPException(status_code=409, detail="All submitted URLs have already been scraped or permanently failed.")
+
+    for url in filtered_urls:
         await _queue.put((url, body.tag))
-    log.info("[api] Queued %d URL(s) under tag '%s'.", len(url_strings), body.tag)
+    log.info("[api] Queued %d URL(s) under tag '%s'.", len(filtered_urls), body.tag)
     return ScrapeResponse(
-        message=f"Accepted. {len(url_strings)} URL(s) added to the queue.",
-        queued=len(url_strings),
+        message=f"Accepted. {len(filtered_urls)} URL(s) added to the queue.",
+        queued=len(filtered_urls),
         tag=body.tag,
     )
 
@@ -526,6 +543,40 @@ async def enqueue_scrape(body: ScrapeRequest) -> ScrapeResponse:
 @app.get("/api/queue", response_model=QueueResponse)
 async def queue_status() -> QueueResponse:
     return QueueResponse(remaining=_queue.qsize())
+
+
+# ---------------------------------------------------------------------------
+# Read/Unread Tracker & Favorites
+# ---------------------------------------------------------------------------
+
+READ_STATE_FILE = BASE / "read_state.json"
+
+class ReadStateRequest(BaseModel):
+    path: str
+    read: bool
+
+@app.get("/api/read-state")
+async def get_read_state():
+    if not READ_STATE_FILE.exists():
+        return {}
+    try:
+        with open(READ_STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+@app.post("/api/read-state")
+async def update_read_state(body: ReadStateRequest):
+    state = {}
+    if READ_STATE_FILE.exists():
+        try:
+            with open(READ_STATE_FILE, "r", encoding="utf-8") as f:
+                state = json.load(f)
+        except Exception:
+            pass
+    state[body.path] = body.read
+    _save_json(READ_STATE_FILE, state)
+    return {"status": "ok", "state": state}
 
 
 class FavoriteRequest(BaseModel):
@@ -593,6 +644,103 @@ async def list_tags() -> TagsResponse:
         return TagsResponse(tags=[])
     tags = sorted(e.name for e in BASE.iterdir() if e.is_dir())
     return TagsResponse(tags=tags)
+
+class MegathreadRequest(BaseModel):
+    files: list[str]
+    tag: str
+    title: str
+
+@app.post("/api/megathread")
+async def create_megathread(body: MegathreadRequest):
+    if not body.files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+    
+    megathread_content = []
+    megathread_content.append(f"---\ntitle: \"{body.title}\"\ntags:\n  - {body.tag}\n---\n\n# {body.title}\n\n")
+    
+    tag_folder = _safe_child(BASE, body.tag)
+    tag_folder.mkdir(parents=True, exist_ok=True)
+    
+    for file_path in body.files:
+        parts = file_path.split("/")
+        if len(parts) != 2:
+            continue
+        t, f = parts
+        src = _safe_child(BASE, t) / f
+        if src.exists():
+            with open(src, "r", encoding="utf-8") as r:
+                content = r.read()
+                import re
+                content = re.sub(r'^---\n.*?\n---\n', '', content, flags=re.DOTALL)
+                megathread_content.append(f"## From: {f.replace('.md', '')}\n\n{content}\n\n---\n")
+                
+    safe_title = slugify(body.title) or "megathread"
+    out_file = tag_folder / f"{safe_title}.md"
+    
+    with open(out_file, "w", encoding="utf-8") as w:
+        w.write("".join(megathread_content))
+        
+    for file_path in body.files:
+        parts = file_path.split("/")
+        if len(parts) == 2:
+            t, f = parts
+            src = _safe_child(BASE, t) / f
+            if src.exists():
+                src.unlink()
+                
+    return {"status": "ok", "megathread": f"{body.tag}/{safe_title}.md"}
+
+@app.get("/api/analysis")
+async def get_analysis():
+    if not BASE.is_dir():
+        return {"analysis": []}
+        
+    read_state = {}
+    if READ_STATE_FILE.exists():
+        try:
+            with open(READ_STATE_FILE, "r", encoding="utf-8") as f:
+                read_state = json.load(f)
+        except Exception:
+            pass
+            
+    analysis = []
+    for tag_dir in BASE.iterdir():
+        if tag_dir.is_dir() and tag_dir.name not in ["__pycache__", ".git"]:
+            tag_name = tag_dir.name
+            total_assets = 0
+            total_read = 0
+            total_size_bytes = 0
+            total_read_time = 0
+            
+            for f in tag_dir.glob("*.md"):
+                total_assets += 1
+                total_size_bytes += f.stat().st_size
+                
+                path_key = f"{tag_name}/{f.name}"
+                if read_state.get(path_key, False):
+                    total_read += 1
+                    
+                try:
+                    with open(f, "r", encoding="utf-8") as md_file:
+                        content = md_file.read(1024)
+                        import re
+                        m = re.search(r'reading_time:\s*(\d+)', content)
+                        if m:
+                            total_read_time += int(m.group(1))
+                except Exception:
+                    pass
+            
+            analysis.append({
+                "tag": tag_name,
+                "total_assets": total_assets,
+                "total_read": total_read,
+                "total_pending": total_assets - total_read,
+                "size_mb": round(total_size_bytes / (1024 * 1024), 2),
+                "total_read_time": total_read_time
+            })
+            
+    return {"analysis": analysis}
+
 
 
 @app.get("/api/articles/{tag}", response_model=ArticlesResponse)

@@ -1295,3 +1295,31 @@ textarea {
         color: #000;
     }
 }
+
+/* --- Read/Unread State Tracker & Overlays --- */
+.article-item.unread-bold .article-card-name {
+    font-weight: 700;
+}
+.article-item.unread-bold {
+    border-left: 4px solid var(--accent-color);
+}
+.article-item.read-muted {
+    opacity: 0.6;
+    border-left: 4px solid transparent;
+}
+
+.library-tile .metric-overlay {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    display: block;
+}
+.library-tile.unread-highlight {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+}
+
+/* --- Bionic Reading --- */
+.bionic-word b {
+    font-weight: 800;
+}

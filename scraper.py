@@ -478,6 +478,45 @@ def build_front_matter(
     )
 
 
+def get_api_key() -> str | None:
+    import json
+    import os
+    settings_path = "downloads/settings.json"
+    if os.path.exists(settings_path):
+        try:
+            with open(settings_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data.get("gemini_api_key")
+        except Exception:
+            pass
+    return None
+
+def generate_ai_abstract(article_text: str) -> str:
+    api_key = get_api_key()
+    if not api_key:
+        return ""
+
+    truncated_text = article_text[:10000] 
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+    headers = {'Content-Type': 'application/json'}
+    payload = {
+        "contents": [{
+            "parts": [{"text": f"Provide a concise, 3-bullet point summary of the following article. Do not use introductory phrases, just the bullet points:\n\n{truncated_text}"}]
+        }]
+    }
+
+    try:
+        import requests
+        response = requests.post(url, headers=headers, json=payload, timeout=15.0)
+        response.raise_for_status()
+        result = response.json()
+        summary = result['candidates'][0]['content']['parts'][0]['text']
+        return f"\n> **🤖 AI Abstract:**\n> {summary.replace(chr(10), chr(10)+'> ')}\n\n---\n\n"
+    except Exception as e:
+        log.warning("AI Summarization failed: %s", e)
+        return ""
+
+
 def build_article(
     title: str,
     content_html: str,
@@ -491,7 +530,8 @@ def build_article(
     markdown_body = html_to_markdown(title, content_html)
     word_count, reading_time = calculate_metrics(markdown_body)
     front_matter = build_front_matter(title, source_url, tag, word_count, reading_time)
-    return front_matter + markdown_body
+    ai_abstract = generate_ai_abstract(markdown_body)
+    return front_matter + ai_abstract + markdown_body
 
 
 # ---------------------------------------------------------------------------
