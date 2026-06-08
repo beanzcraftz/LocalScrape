@@ -775,7 +775,7 @@ async def get_analysis():
                     with open(f, "r", encoding="utf-8") as md_file:
                         content = md_file.read(1024)
                         import re
-                        m = re.search(r'reading_time:\s*(\d+)', content)
+                        m = re.search(r'reading_time:\s*"?(\d+)', content)
                         if m:
                             total_read_time += int(m.group(1))
                 except Exception:
