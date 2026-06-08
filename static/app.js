@@ -85,9 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const navRssBtn = document.getElementById('nav-rss-btn');
     const navActivityBtn = document.getElementById('nav-activity-btn');
     const navInfoBtn = document.getElementById('nav-info-btn');
+    const navSettingsBtn = document.getElementById('nav-settings-btn');
     
     const activityMonitorView = document.getElementById('activity-monitor-view');
     const infoView = document.getElementById('info-view');
+    const settingsView = document.getElementById('settings-view');
     const rssView = document.getElementById('rss-view');
     const rssUrlInput = document.getElementById('rss-url-input');
     const rssTagInput = document.getElementById('rss-tag-input');
@@ -458,6 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
         readerView.classList.add('hidden');
         activityMonitorView.classList.add('hidden');
         infoView.classList.add('hidden');
+        settingsView.classList.add('hidden');
         rssView.classList.add('hidden');
         emptyStateView.classList.add('hidden');
         readerControls.classList.add('hidden');
@@ -487,6 +490,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'info') {
             infoView.classList.remove('hidden');
             navInfoBtn.classList.add('active');
+        } else if (viewName === 'settings') {
+            settingsView.classList.remove('hidden');
+            if (navSettingsBtn) navSettingsBtn.classList.add('active');
+            loadSettings();
         } else if (viewName === 'reader') {
             readerView.classList.remove('hidden');
             readerControls.classList.remove('hidden');
@@ -506,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navRssBtn.addEventListener('click', () => switchView('rss'));
     navActivityBtn.addEventListener('click', () => switchView('activity'));
     navInfoBtn.addEventListener('click', () => switchView('info'));
+    if (navSettingsBtn) navSettingsBtn.addEventListener('click', () => switchView('settings'));
     
     emptyStateDashboardBtn.addEventListener('click', () => switchView('library'));
 
@@ -1690,6 +1698,140 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Settings UI Logic ---
+    async function loadSettings() {
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('setting-gemini-key').value = data.gemini_api_key || '';
+                document.getElementById('setting-auto-summarize').checked = !!data.auto_summarize;
+                document.getElementById('setting-rss-polling').value = data.rss_polling_interval || 2;
+                document.getElementById('setting-rss-retention').value = data.rss_retention_days || 5;
+                document.getElementById('setting-log-retention').value = data.log_retention_days || 10;
+                document.getElementById('setting-theme').value = data.default_theme || 'dark';
+                document.getElementById('setting-typography').value = data.typography || 'sans-serif';
+                
+                const fontSize = data.base_font_size || 16;
+                document.getElementById('setting-font-size').value = fontSize;
+                document.getElementById('setting-font-size-val').textContent = fontSize;
+                
+                const ttsSpeed = data.tts_default_speed || 1.0;
+                document.getElementById('setting-tts-speed').value = ttsSpeed;
+                document.getElementById('setting-tts-speed-val').textContent = ttsSpeed;
+                
+                document.getElementById('setting-global-cookies').value = data.global_cookies || '';
+
+                populateVoiceList(data.tts_preferred_voice);
+                applySettingsToDOM(data);
+            }
+        } catch (e) {
+            console.error('Failed to load settings:', e);
+        }
+    }
+
+    function populateVoiceList(preferredVoice) {
+        const voiceSelect = document.getElementById('setting-tts-voice');
+        if (!voiceSelect) return;
+        const voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = '<option value="">System Default</option>';
+        voices.forEach(voice => {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            if (preferredVoice && voice.name === preferredVoice) option.selected = true;
+            voiceSelect.appendChild(option);
+        });
+    }
+
+    if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = () => {
+            const voiceSelect = document.getElementById('setting-tts-voice');
+            if (voiceSelect) {
+                populateVoiceList(voiceSelect.value);
+            }
+        };
+    }
+
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+    if (saveSettingsBtn) {
+        saveSettingsBtn.addEventListener('click', async () => {
+            const payload = {
+                gemini_api_key: document.getElementById('setting-gemini-key').value,
+                auto_summarize: document.getElementById('setting-auto-summarize').checked,
+                rss_polling_interval: parseInt(document.getElementById('setting-rss-polling').value) || 2,
+                rss_retention_days: parseInt(document.getElementById('setting-rss-retention').value) || 5,
+                log_retention_days: parseInt(document.getElementById('setting-log-retention').value) || 10,
+                default_theme: document.getElementById('setting-theme').value,
+                typography: document.getElementById('setting-typography').value,
+                base_font_size: parseInt(document.getElementById('setting-font-size').value) || 16,
+                tts_default_speed: parseFloat(document.getElementById('setting-tts-speed').value) || 1.0,
+                tts_preferred_voice: document.getElementById('setting-tts-voice').value,
+                global_cookies: document.getElementById('setting-global-cookies').value
+            };
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    showToast('Settings saved successfully!');
+                    applySettingsToDOM(payload);
+                } else {
+                    showToast('Failed to save settings', true);
+                }
+            } catch (e) {
+                showToast('Error saving settings', true);
+            }
+        });
+    }
+
+    function applySettingsToDOM(settings) {
+        document.documentElement.setAttribute('data-theme', settings.default_theme);
+        if (settings.typography === 'serif') {
+            document.body.style.fontFamily = 'Georgia, serif';
+        } else {
+            document.body.style.fontFamily = "'Inter', sans-serif";
+        }
+        document.documentElement.style.fontSize = settings.base_font_size + 'px';
+    }
+
+    const fontSizeInput = document.getElementById('setting-font-size');
+    if (fontSizeInput) {
+        fontSizeInput.addEventListener('input', (e) => {
+            document.getElementById('setting-font-size-val').textContent = e.target.value;
+            // Real-time preview
+            document.documentElement.style.fontSize = e.target.value + 'px';
+        });
+    }
+
+    const themeSelect = document.getElementById('setting-theme');
+    if (themeSelect) {
+        themeSelect.addEventListener('change', (e) => {
+            document.documentElement.setAttribute('data-theme', e.target.value);
+        });
+    }
+
+    const typoSelect = document.getElementById('setting-typography');
+    if (typoSelect) {
+        typoSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'serif') document.body.style.fontFamily = 'Georgia, serif';
+            else document.body.style.fontFamily = "'Inter', sans-serif";
+        });
+    }
+
+    const ttsSpeedInput = document.getElementById('setting-tts-speed');
+    if (ttsSpeedInput) {
+        ttsSpeedInput.addEventListener('input', (e) => {
+            document.getElementById('setting-tts-speed-val').textContent = e.target.value;
+        });
+    }
+
+    // Load initial settings on boot to apply theme/typography globally immediately
+    fetch('/api/settings').then(res => res.json()).then(data => applySettingsToDOM(data)).catch(() => {});
 
     // --- Initialization ---
     updateOnlineStatus();

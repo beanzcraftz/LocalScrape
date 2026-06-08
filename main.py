@@ -274,7 +274,11 @@ def cleanup_old_rss_articles(feeds: list[dict]):
         return
 
     now = time.time()
-    five_days_ago = now - (5 * 24 * 3600)
+    
+    settings = _load_json(BASE / "settings.json", {})
+    retention_days = int(settings.get("rss_retention_days", 5))
+    retention_seconds = retention_days * 24 * 3600
+    cutoff_time = now - retention_seconds
     deleted_count = 0
 
     for tag in rss_tags:
@@ -285,7 +289,7 @@ def cleanup_old_rss_articles(feeds: list[dict]):
         for md_file in tag_dir.glob("*.md"):
             try:
                 # Check file modification time
-                if md_file.stat().st_mtime < five_days_ago:
+                if md_file.stat().st_mtime < cutoff_time:
                     md_file.unlink()
                     deleted_count += 1
             except Exception as exc:
@@ -318,8 +322,10 @@ def poll_rss_feeds():
 # ---------------------------------------------------------------------------
 
 def _cleanup_jobs_logs():
-    """Remove jobs older than 10 days and truncate app.log if too large."""
-    ten_days = 864000
+    """Remove old jobs and truncate app.log."""
+    settings = _load_json(BASE / "settings.json", {})
+    retention_days = int(settings.get("log_retention_days", 10))
+    retention_seconds = retention_days * 86400
     now = time.time()
     
     # 1. Clean failed.json
@@ -361,12 +367,17 @@ async def lifespan(app: FastAPI):  # noqa: ARG001
     _worker_task = asyncio.create_task(_worker())
     log.info("[startup] Queue worker started.")
 
-    # Start APScheduler for RSS polling (every 2 hours)
+    # Load settings to get interval
+    settings = _load_json(BASE / "settings.json", {})
+    rss_interval = int(settings.get("rss_polling_interval", 2))
+
+    # Start APScheduler for RSS polling
     scheduler = BackgroundScheduler()
-    scheduler.add_job(poll_rss_feeds, "interval", hours=2, id="rss_poll")
+    scheduler.add_job(poll_rss_feeds, "interval", hours=rss_interval, id="rss_poll")
     scheduler.add_job(_cleanup_jobs_logs, "interval", days=1, id="cleanup_jobs")
     scheduler.start()
-    log.info("[startup] RSS scheduler started (interval: 2h). Cleanup scheduler started (interval: 1d).")
+    app.state.scheduler = scheduler
+    log.info(f"[startup] RSS scheduler started (interval: {rss_interval}h). Cleanup scheduler started (interval: 1d).")
 
     yield
 
@@ -416,6 +427,19 @@ class ScrapeRequest(BaseModel):
         if not v:
             raise ValueError("urls list must not be empty.")
         return v
+
+class SettingsPayload(BaseModel):
+    gemini_api_key: str = ""
+    auto_summarize: bool = False
+    rss_polling_interval: int = 2
+    rss_retention_days: int = 5
+    log_retention_days: int = 10
+    default_theme: str = "dark"
+    typography: str = "sans-serif"
+    base_font_size: int = 16
+    tts_default_speed: float = 1.0
+    tts_preferred_voice: str = ""
+    global_cookies: str = ""
 
 
 class ScrapeResponse(BaseModel):
@@ -644,6 +668,34 @@ async def list_tags() -> TagsResponse:
         return TagsResponse(tags=[])
     tags = sorted(e.name for e in BASE.iterdir() if e.is_dir())
     return TagsResponse(tags=tags)
+
+@app.get("/api/settings", response_model=SettingsPayload)
+async def get_settings():
+    settings = _load_json(BASE / "settings.json", {})
+    if COOKIES_FILE.exists():
+        with open(COOKIES_FILE, "r", encoding="utf-8") as f:
+            settings["global_cookies"] = f.read()
+    else:
+        settings["global_cookies"] = ""
+    return SettingsPayload(**settings)
+
+@app.post("/api/settings")
+async def update_settings(body: SettingsPayload):
+    settings_dict = body.dict()
+    _save_json(BASE / "settings.json", settings_dict)
+    
+    if body.global_cookies:
+        with open(COOKIES_FILE, "w", encoding="utf-8") as w:
+            w.write(body.global_cookies)
+            
+    try:
+        from apscheduler.triggers.interval import IntervalTrigger
+        if hasattr(app.state, "scheduler"):
+            app.state.scheduler.reschedule_job("rss_poll", trigger=IntervalTrigger(hours=body.rss_polling_interval))
+    except Exception as e:
+        log.warning(f"Could not reschedule rss_poll: {e}")
+        
+    return {"status": "ok"}
 
 class MegathreadRequest(BaseModel):
     files: list[str]

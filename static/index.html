@@ -58,6 +58,7 @@
                     <button id="nav-rss-btn" class="nav-btn">RSS Feeds</button>
                     <button id="nav-activity-btn" class="nav-btn">Activity Monitor</button>
                     <button id="nav-info-btn" class="nav-btn">Info Guide</button>
+                    <button id="nav-settings-btn" class="nav-btn">⚙️ Settings</button>
                     <button id="nav-backup-btn" class="nav-btn">Backup Data</button>
                 </div>
                 <h3>Your Library</h3>
@@ -455,6 +456,110 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Settings View -->
+                <section id="settings-view" class="settings-view hidden">
+                    <div class="card-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h2>Settings Configuration</h2>
+                        <p style="color: var(--text-muted); font-size: 0.9em; margin-top: 0.25rem;">Adjust application preferences and defaults.</p>
+                    </div>
+                    
+                    <div class="settings-grid" style="display: grid; grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem;">
+                        
+                        <!-- Card 1: AI & Integrations -->
+                        <div class="settings-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">🤖 AI & Integrations</h3>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Gemini API Key</label>
+                                <input type="password" id="setting-gemini-key" class="form-control" placeholder="Enter API Key">
+                            </div>
+                            <div class="form-group" style="display:flex; align-items:center; justify-content:space-between;">
+                                <label style="font-weight: 500;">Auto-Summarize Scrapes</label>
+                                <label class="switch">
+                                  <input type="checkbox" id="setting-auto-summarize">
+                                  <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Maintenance & Network -->
+                        <div class="settings-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">🛠 Maintenance & Network</h3>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">RSS Polling Interval</label>
+                                <select id="setting-rss-polling" class="form-control">
+                                    <option value="1">1 Hour</option>
+                                    <option value="2">2 Hours</option>
+                                    <option value="6">6 Hours</option>
+                                    <option value="24">24 Hours</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">RSS Retention (Days)</label>
+                                    <input type="number" id="setting-rss-retention" class="form-control" min="1" max="365">
+                                </div>
+                                <div>
+                                    <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Log Retention (Days)</label>
+                                    <input type="number" id="setting-log-retention" class="form-control" min="1" max="365">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Reading & UI Defaults -->
+                        <div class="settings-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">🎨 Reading & UI Defaults</h3>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Default Theme</label>
+                                <select id="setting-theme" class="form-control">
+                                    <option value="dark">Dark Theme</option>
+                                    <option value="light">Light Theme</option>
+                                    <option value="terminal">Hacker Theme</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Typography</label>
+                                <select id="setting-typography" class="form-control">
+                                    <option value="sans-serif">Sans-Serif (Modern)</option>
+                                    <option value="serif">Serif (Classic)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Base Font Size: <span id="setting-font-size-val">16</span>px</label>
+                                <input type="range" id="setting-font-size" min="14" max="24" value="16" style="width: 100%;">
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Text-to-Speech (TTS) Defaults -->
+                        <div class="settings-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">🎧 Text-to-Speech Defaults</h3>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Preferred Voice</label>
+                                <select id="setting-tts-voice" class="form-control">
+                                    <option value="">System Default</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Default Speed</label>
+                                <input type="number" id="setting-tts-speed" class="form-control" min="0.5" max="2.0" step="0.1" value="1.0">
+                            </div>
+                        </div>
+
+                        <!-- Card 5: Scraping Engine -->
+                        <div class="settings-card" style="background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                            <h3 style="margin-bottom: 1rem; color: var(--accent-color);">🌐 Scraping Engine</h3>
+                            <div class="form-group">
+                                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Global Cookies (Netscape Format)</label>
+                                <textarea id="setting-global-cookies" class="form-control" rows="5" placeholder="# Netscape HTTP Cookie File..."></textarea>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div style="padding: 1.5rem; text-align: right; border-top: 1px solid var(--border-color);">
+                        <button id="save-settings-btn" class="btn primary-btn" style="padding: 0.75rem 2rem; font-size: 1.1rem;">Save Settings</button>
                     </div>
                 </section>
             </div>

@@ -486,6 +486,8 @@ def get_api_key() -> str | None:
         try:
             with open(settings_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
+                if not data.get("auto_summarize", False):
+                    return None
                 return data.get("gemini_api_key")
         except Exception:
             pass
