@@ -131,6 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const teleprompterPlayBtn = document.getElementById('teleprompter-play-btn');
     const teleprompterSpeed = document.getElementById('teleprompter-speed');
     
+    const readerMenuBtn = document.getElementById('reader-menu-btn');
+    const readerMenuDropdown = document.getElementById('reader-menu-dropdown');
+    
     const exitFocusBtn = document.getElementById('exit-focus-btn');
     const nextArticleBtn = document.getElementById('next-article-btn');
     const nextArticleMainBtn = document.getElementById('next-article-main-btn');
@@ -1591,19 +1594,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Swipe Gestures in Reader ---
     let touchstartX = 0;
+    let touchstartY = 0;
     let touchendX = 0;
+    let touchendY = 0;
     const swipeThreshold = 50;
 
     readerView.addEventListener('touchstart', e => {
         touchstartX = e.changedTouches[0].screenX;
+        touchstartY = e.changedTouches[0].screenY;
     }, {passive: true});
 
     readerView.addEventListener('touchend', e => {
         touchendX = e.changedTouches[0].screenX;
+        touchendY = e.changedTouches[0].screenY;
         handleSwipe();
     }, {passive: true});
 
     function handleSwipe() {
+        if (Math.abs(touchendY - touchstartY) > Math.abs(touchendX - touchstartX)) {
+            // Primarily vertical scrolling, ignore horizontal swipe
+            return;
+        }
+
         if (touchendX < touchstartX - swipeThreshold) {
             // Swiped left -> Next article
             if (nextArticleBtn) nextArticleBtn.click();
