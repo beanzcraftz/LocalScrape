@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.3
+### Bug Fixes
+- **Reading Time Calculation:** Fixed a regex parsing bug on the backend where quoted reading times in markdown frontmatter caused the total reading time calculations on the library dashboard to incorrectly display as 0 minutes.
+
 ## v2.1.2
 ### Bug Fixes
 - **Reader Navigation Fix:** Pressing "Back" or deleting an article from within the Reader View now correctly returns you to the current tag's folder view instead of dropping you all the way back to the main library grid.
