@@ -282,7 +282,14 @@
                                 Every article in the feed will be scraped. Use keywords to filter only what you care about (e.g. <code>AI, machine learning</code> will only scrape articles mentioning either term).
                             </div>
                             
-                            <p><strong>3. Activity Monitor:</strong> The Activity Monitor displays real-time backend logs and a 10-day history of successfully completed or failed jobs.</p>
+                            <p><strong>3. Power-User Features:</strong></p>
+                            <ul style="padding-left:1.5rem; line-height:1.8;">
+                                <li><strong>Megathreads:</strong> Select multiple articles using the checkboxes, then click the "Megathread" button to stitch them together into a single continuous digest.</li>
+                                <li><strong>Bionic Reading:</strong> Toggle the brain icon in the reader view to dynamically bold the first half of words, guiding your eyes for faster reading.</li>
+                                <li><strong>Teleprompter:</strong> Activate auto-scroll from the reader controls for hands-free reading.</li>
+                            </ul>
+                            
+                            <p style="margin-top:1.25rem;"><strong>4. Activity Monitor:</strong> The Activity Monitor displays real-time backend logs and a 10-day history of successfully completed or failed jobs.</p>
                             <p><strong>4. Viewing:</strong> Click on a tag in Your Library or Dashboard to expand it. You can instantly filter articles using the Search Bar. Click on an article to open the Reader View. Use the top bar to adjust text size or toggle themes.</p>
                             <p><strong>5. Reader Tools:</strong> Inside the Reader View, use the action buttons to <strong>👓 Focus</strong> (hide distractions), <strong>🎧 Listen</strong> (text-to-speech with speed controls), or <strong>★ Favorite</strong> the article to pin it to your Library grid. You can also export articles as Markdown using the <strong>⬇️ Download</strong> button, or hit `Ctrl+P` to save a clean PDF.</p>
                             <p><strong>6. Managing Data:</strong> Inside the Reader View, you can Rename or Delete articles. When you scroll to the bottom of an article, a "Delete this article" prompt appears if you're done reading. You can also download a zip of your entire library using the <strong>Backup Data</strong> button in the sidebar.</p>
@@ -382,13 +389,14 @@
                         <!-- Architecture Tab -->
                         <div id="tab-architecture" class="tab-content hidden">
                             <h3>Architecture</h3>
-                            <p><strong>Frontend:</strong> A purely framework-free Single Page Application built with Vanilla HTML, CSS, and JS. It uses <code>marked.js</code> for rendering Markdown.</p>
-                            <p><strong>Backend API:</strong> Built with Python and <code>FastAPI</code>. It provides RESTful endpoints for queuing scrapes, checking status, and managing files (CRUD operations on the downloads directory).</p>
-                            <p><strong>Scraping Pipeline (4-Stage Fallback):</strong>
+                            <p><strong>Frontend:</strong> A purely framework-free Single Page Application built with Vanilla HTML, CSS, and JS. It uses <code>marked.js</code> for rendering Markdown and features a Progressive Web App (PWA) manifest that natively supports the Web Share Target API on mobile devices.</p>
+                            <p><strong>Backend API:</strong> Built with Python and <code>FastAPI</code>. It provides RESTful endpoints for queuing scrapes, checking status, executing bulk Megathread digests, and managing files (CRUD operations on the downloads directory).</p>
+                            <p><strong>Scraping Pipeline (5-Stage with AI):</strong>
                                 <br>1. Check cached version on <code>archive.md</code>.
                                 <br>2. Fallback to Accelerated Mobile Pages (AMP) via <code>?amp</code>.
                                 <br>3. Fallback to direct fetch with spoofed Referer headers.
                                 <br>4. Final fallback: Playwright headless Chromium (images/fonts blocked for speed).
+                                <br>5. <strong>AI Summarization:</strong> If a Gemini API key is configured, the Markdown is parsed to generate a 3-bullet point AI abstract.
                             </p>
                         </div>
                         
@@ -401,7 +409,9 @@
                                 <li><code>tags/</code>: Folders containing <code>.md</code> markdown articles.</li>
                                 <li><code>feeds.json</code>: RSS feed configurations.</li>
                                 <li><code>failed.json</code>: Vault of failed scrape attempts (max 3 strikes).</li>
-                                <li><code>cookies.json</code>: Domain-specific Netscape cookies.</li>
+                                <li><code>completed.json</code>: Ledger of historical scrapes to block exact-match URL duplication.</li>
+                                <li><code>read_state.json</code>: Dictionary tracking boolean read/unread statuses.</li>
+                                <li><code>settings.json</code>: Local configuration overrides (e.g., Gemini API keys).</li>
                                 <li><code>favorites.json</code>: Contains all Starred article paths.</li>
                             </ul>
                         </div>
