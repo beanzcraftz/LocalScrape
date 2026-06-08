@@ -714,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         readingProgress.style.width = `${progress}%`;
                     }
                     
-                    if (scrollBottom >= totalHeight - 100) {
+                    if (scrollBottom >= totalHeight - 350) {
                         endOfArticle.classList.remove('hidden');
                     } else {
                         endOfArticle.classList.add('hidden');
@@ -1411,6 +1411,20 @@ document.addEventListener('DOMContentLoaded', () => {
             isFocusMode = false;
             document.body.classList.remove('focus-mode');
             focusModeBtn.style.color = '';
+        });
+    }
+
+    if (readerMenuBtn && readerMenuDropdown) {
+        readerMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            readerMenuDropdown.classList.toggle('hidden');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!readerMenuDropdown.classList.contains('hidden') && !e.target.closest('.reader-dropdown')) {
+                readerMenuDropdown.classList.add('hidden');
+            }
         });
     }
 
