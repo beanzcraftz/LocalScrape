@@ -1,10 +1,12 @@
-const CACHE_NAME = 'localscrape-v2.1.4';
+const CACHE_NAME = 'localscrape-v2.1.5';
 const ASSETS = [
   '/',
   '/static/index.html',
   '/static/styles.css',
   '/static/app.js',
   '/static/logo.png',
+  '/static/icon-dark.png',
+  '/static/apple-touch-icon.png',
   '/static/manifest.json'
 ];
 

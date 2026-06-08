@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.5
+### UI Enhancements
+- **iOS App Icon:** Updated the PWA manifest and generated new `apple-touch-icon` assets with a dark background to prevent iOS from automatically rendering transparent PNGs with an ugly white background.
+
 ## v2.1.4
 ### UI Enhancements
 - **Activity Monitor:** Added "Clear All" buttons to both the Failed Jobs and Completed Jobs sections within the Activity Monitor, allowing users to wipe history logs on demand.
