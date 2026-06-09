@@ -617,6 +617,9 @@
             <!-- Upload Books Tab -->
             <div id="add-tab-book" class="add-tab-content hidden">
                 <p style="margin-bottom: 1rem; color: var(--text-muted);">Drag & Drop PDFs or EPUBs natively to your Bookshelf.</p>
+                <div style="margin-bottom: 1rem;">
+                    <input type="text" id="book-tag-input" list="tag-datalist" placeholder="Category (e.g. documentation, novels) - Optional" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-color); box-sizing: border-box;">
+                </div>
                 <div class="upload-zone" id="book-upload-zone" onclick="document.getElementById('book-file-input').click()">
                     <p>Select Files (.pdf, .epub)</p>
                     <input type="file" id="book-file-input" multiple accept=".pdf,.epub" style="display: none;">

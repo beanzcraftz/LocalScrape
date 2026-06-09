@@ -58,7 +58,7 @@ from urllib.parse import quote, unquote
 
 import feedparser
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI, HTTPException, Path as FPath, Query, UploadFile, File
+from fastapi import FastAPI, HTTPException, Path as FPath, Query, UploadFile, File, Form
 from fastapi.responses import PlainTextResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl, field_validator
@@ -833,7 +833,10 @@ async def get_analysis():
 
 
 @app.post("/api/books/upload")
-async def upload_books(files: list[UploadFile] = File(...)):
+async def upload_books(
+    files: list[UploadFile] = File(...),
+    tag: str | None = Form(None)
+):
     results = []
     for f in files:
         if not f.filename:
@@ -883,7 +886,8 @@ async def upload_books(files: list[UploadFile] = File(...)):
             "id": book_id,
             "title": title,
             "ext": ext,
-            "added_at": time.time()
+            "added_at": time.time(),
+            "tag": tag or "uncategorized"
         }
         _save_json(BOOKS_DIR / f"{book_id}.meta.json", meta)
         results.append(meta)
@@ -903,6 +907,51 @@ async def list_books():
             pass
     books.sort(key=lambda x: x.get("added_at", 0), reverse=True)
     return {"books": books}
+
+
+class BookRenameRequest(BaseModel):
+    new_name: str | None = None
+    tag: str | None = None
+
+@app.put("/api/books/{book_id}")
+async def rename_book(
+    book_id: str,
+    body: BookRenameRequest
+):
+    meta_path = BOOKS_DIR / f"{book_id}.meta.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="Book metadata not found.")
+        
+    meta = _load_json(meta_path, {})
+    if body.new_name is not None:
+        meta["title"] = body.new_name
+    if body.tag is not None:
+        meta["tag"] = body.tag
+        
+    _save_json(meta_path, meta)
+    return {"message": "Book updated", "book": meta}
+
+@app.delete("/api/books/{book_id}")
+async def delete_book(book_id: str):
+    meta_path = BOOKS_DIR / f"{book_id}.meta.json"
+    if not meta_path.exists():
+        raise HTTPException(status_code=404, detail="Book metadata not found.")
+        
+    meta = _load_json(meta_path, {})
+    ext = meta.get("ext", "")
+    
+    # Delete metadata
+    meta_path.unlink(missing_ok=True)
+    
+    # Delete raw file
+    (BOOKS_DIR / book_id).unlink(missing_ok=True)
+    
+    # If epub, delete the extracted md file
+    if ext == ".epub":
+        md_name = Path(book_id).stem + ".md"
+        (BOOKS_DIR / md_name).unlink(missing_ok=True)
+        
+    return {"message": "Book deleted"}
 
 
 @app.get("/api/books/file/{filename}")

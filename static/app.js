@@ -576,6 +576,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 formData.append('files', files[i]);
             }
             
+            const tagInput = document.getElementById('book-tag-input');
+            if (tagInput && tagInput.value.trim()) {
+                formData.append('tag', tagInput.value.trim().toLowerCase().replace(/\s+/g, '-'));
+            }
+            
             try {
                 const res = await fetch('/api/books/upload', {
                     method: 'POST',
@@ -603,24 +608,87 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
             
             booksGrid.innerHTML = '';
+            booksGrid.style.display = 'block';
+
             if (!data.books || data.books.length === 0) {
                 booksGrid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">Your shelf is empty. Upload a PDF or EPUB to get started!</p>';
                 return;
             }
             
+            const groups = {};
             data.books.forEach(b => {
-                const tile = document.createElement('div');
-                tile.className = 'book-tile';
-                const d = new Date(b.added_at * 1000).toLocaleDateString();
-                const icon = b.ext === '.pdf' ? '📄' : '📖';
-                tile.innerHTML = `
-                    <div class="book-icon">${icon}</div>
-                    <div class="book-tile-title">${b.title}</div>
-                    <div class="book-tile-meta">${b.ext.toUpperCase().replace('.','')} · Added ${d}</div>
-                `;
-                tile.onclick = () => openBook(b.id, b.ext);
-                booksGrid.appendChild(tile);
+                const t = b.tag || "uncategorized";
+                if (!groups[t]) groups[t] = [];
+                groups[t].push(b);
             });
+            
+            for (const tag of Object.keys(groups).sort()) {
+                const header = document.createElement('h3');
+                header.className = 'books-category-header';
+                header.textContent = tag.toUpperCase();
+                booksGrid.appendChild(header);
+                
+                const grid = document.createElement('div');
+                grid.className = 'books-category-grid';
+                grid.style.display = 'grid';
+                grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
+                grid.style.gap = '1.5rem';
+                grid.style.marginBottom = '2.5rem';
+                
+                groups[tag].forEach(b => {
+                    const tile = document.createElement('div');
+                    tile.className = 'book-tile';
+                    const d = new Date(b.added_at * 1000).toLocaleDateString();
+                    const icon = b.ext === '.pdf' ? '📄' : '📖';
+                    
+                    tile.innerHTML = `
+                        <div class="book-actions">
+                            <button class="book-action-btn edit-btn" title="Rename Book">✏️</button>
+                            <button class="book-action-btn delete-btn" title="Delete Book">🗑️</button>
+                        </div>
+                        <div class="book-icon">${icon}</div>
+                        <div class="book-tile-title">${b.title}</div>
+                        <div class="book-tile-meta">${b.ext.toUpperCase().replace('.','')} · Added ${d}</div>
+                    `;
+                    
+                    tile.onclick = (e) => {
+                        if (e.target.closest('.book-action-btn')) return;
+                        openBook(b.id, b.ext);
+                    };
+                    
+                    const editBtn = tile.querySelector('.edit-btn');
+                    editBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        const newName = prompt('Rename book to:', b.title);
+                        if (newName && newName !== b.title) {
+                            try {
+                                const r = await fetch('/api/books/' + b.id, {
+                                    method: 'PUT',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({new_name: newName})
+                                });
+                                if (r.ok) renderBooksGrid();
+                                else alert('Failed to rename book.');
+                            } catch (err) { console.error(err); }
+                        }
+                    };
+                    
+                    const delBtn = tile.querySelector('.delete-btn');
+                    delBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        if (confirm('Delete book "' + b.title + '"?')) {
+                            try {
+                                const r = await fetch('/api/books/' + b.id, { method: 'DELETE' });
+                                if (r.ok) renderBooksGrid();
+                                else alert('Failed to delete book.');
+                            } catch (err) { console.error(err); }
+                        }
+                    };
+                    
+                    grid.appendChild(tile);
+                });
+                booksGrid.appendChild(grid);
+            }
         } catch (err) {
             console.error(err);
             booksGrid.innerHTML = '<p style="color:var(--error-text);">Failed to load books.</p>';
@@ -991,6 +1059,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renameArticleBtn.addEventListener('click', async () => {
         if (!currentArticleTag || !currentArticleFilename) return;
+        
+        if (currentArticleTag === 'books') {
+            const newName = prompt('Rename book to:');
+            if (newName) {
+                try {
+                    const res = await fetch(`/api/books/${currentArticleFilename}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ new_name: newName })
+                    });
+                    if (res.ok) {
+                        alert('Book renamed successfully. Changes will reflect in the Bookshelf.');
+                        renderBooksGrid();
+                    } else {
+                        alert('Failed to rename book.');
+                    }
+                } catch (err) {}
+            }
+            return;
+        }
+
         const newName = prompt('Rename article to:', currentArticleFilename.replace('.md', ''));
         if (newName && newName + '.md' !== currentArticleFilename) {
             try {
@@ -1012,16 +1101,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     deleteArticleBtn.addEventListener('click', async () => {
         if (!currentArticleTag || !currentArticleFilename) return;
+        
+        if (currentArticleTag === 'books') {
+            if (confirm(`Delete this book from your Bookshelf?`)) {
+                try {
+                    const res = await fetch(`/api/books/${currentArticleFilename}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        renderBooksGrid();
+                        closeReaderBtn.click();
+                    } else {
+                        alert('Failed to delete book.');
+                    }
+                } catch (err) {}
+            }
+            return;
+        }
+
         if (confirm(`Delete article '${currentArticleFilename}'?`)) {
             try {
                 const res = await fetch(`/api/articles/${currentArticleTag}/${currentArticleFilename}`, { method: 'DELETE' });
                 if (res.ok) {
                     loadTags();
-                    if (currentArticleTag) {
-                        openTagView(currentArticleTag);
-                    } else {
-                        switchView('library');
+                    if (currentArticleTag !== 'books' && !tagArticlesView.classList.contains('hidden')) {
+                        loadArticlesForTag(currentArticleTag);
                     }
+                    closeReaderBtn.click();
                 } else {
                     alert('Failed to delete article.');
                 }
