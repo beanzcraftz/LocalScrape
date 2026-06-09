@@ -456,8 +456,12 @@ class QueueResponse(BaseModel):
     remaining: int
 
 
+class TagItem(BaseModel):
+    name: str
+    size: str
+
 class TagsResponse(BaseModel):
-    tags: list[str]
+    tags: list[TagItem]
 
 
 class ArticleItem(BaseModel):
@@ -700,11 +704,34 @@ async def backup_data():
     )
 
 
+def _get_dir_size(path: Path) -> int:
+    total = 0
+    import os
+    for root, _, files in os.walk(path):
+        for f in files:
+            fp = os.path.join(root, f)
+            if not os.path.islink(fp):
+                total += os.path.getsize(fp)
+    return total
+
+def _format_size(size_bytes: int) -> str:
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size_bytes < 1024:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024
+    return f"{size_bytes:.1f} PB"
+
 @app.get("/api/tags", response_model=TagsResponse)
 async def list_tags() -> TagsResponse:
     if not BASE.is_dir():
         return TagsResponse(tags=[])
-    tags = sorted(e.name for e in BASE.iterdir() if e.is_dir())
+    
+    tags = []
+    for d in sorted(BASE.iterdir(), key=lambda x: x.name):
+        if d.is_dir():
+            size_str = _format_size(_get_dir_size(d))
+            tags.append(TagItem(name=d.name, size=size_str))
+            
     return TagsResponse(tags=tags)
 
 @app.get("/api/settings", response_model=SettingsPayload)
@@ -902,6 +929,13 @@ async def list_books():
         try:
             meta = _load_json(f, {})
             if meta:
+                book_id = meta.get("id")
+                ext = meta.get("ext", ".pdf")
+                book_file = BOOKS_DIR / f"{book_id}{ext}"
+                if book_file.exists():
+                    meta["size"] = _format_size(book_file.stat().st_size)
+                else:
+                    meta["size"] = "0 B"
                 books.append(meta)
         except Exception:
             pass
@@ -1345,3 +1379,33 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
 async def serve_frontend():
     return FileResponse("static/index.html")
+
+class MoveRequest(BaseModel):
+    items: list[str]
+    destination: str
+    type: str
+
+@app.put("/api/move")
+async def move_items(req: MoveRequest):
+    import shutil
+    
+    if req.type == "article":
+        dest_dir = BASE / req.destination
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for item in req.items:
+            parts = item.split("/")
+            if len(parts) == 2:
+                src_path = BASE / parts[0] / parts[1]
+                if src_path.exists() and src_path.is_file():
+                    shutil.move(str(src_path), str(dest_dir / parts[1]))
+                    
+    elif req.type == "book":
+        for book_id in req.items:
+            meta_path = BOOKS_DIR / f"{book_id}.meta.json"
+            if meta_path.exists():
+                meta = _load_json(meta_path, {})
+                meta["tag"] = req.destination
+                meta["category"] = req.destination
+                _save_json(meta_path, meta)
+                
+    return {"status": "ok", "message": f"Moved {len(req.items)} items"}

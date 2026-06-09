@@ -48,13 +48,20 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.3.0</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.4.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
                     <h3>Your Shelf</h3>
-                    <button id="nav-library-btn" class="nav-btn active">📰 News</button>
-                    <button id="nav-books-btn" class="nav-btn">📚 Books</button>
+                    <button id="nav-favs-btn" class="nav-btn" style="text-align: left;"><span style="color: gold; margin-right: 0.5rem;">★</span> Favorites</button>
+                    <details class="sidebar-details">
+                        <summary id="nav-library-btn" class="nav-btn">📰 News</summary>
+                        <ul id="sidebar-news-tags" class="tags-list nested-list"></ul>
+                    </details>
+                    <details class="sidebar-details">
+                        <summary id="nav-books-btn" class="nav-btn">📚 Books</summary>
+                        <ul id="sidebar-books-categories" class="tags-list nested-list"></ul>
+                    </details>
                 </div>
                 <h3>Management</h3>
                 <div class="sidebar-menu">
@@ -63,10 +70,6 @@
                     <button id="nav-settings-btn" class="nav-btn">⚙️ Settings</button>
                     <button id="nav-backup-btn" class="nav-btn">Backup Data</button>
                 </div>
-                <h3>Your Library</h3>
-                <ul id="tags-list" class="tags-list">
-                    <!-- Tags and articles populated here by JS -->
-                </ul>
             </div>
         </aside>
 
@@ -295,7 +298,12 @@
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
                             <h3>Changelog (Major Milestones)</h3>
-                            <h4>v3.3.0 (Current)</h4>
+                            <h4>v3.4.0 (Current)</h4>
+                            <ul>
+                                <li><strong>Hierarchical Sidebar & Move Engine:</strong> Collapsible folder tree for shelves and a powerful new Batch Move engine for organizing books and articles.</li>
+                                <li><strong>List & Details Layouts:</strong> Fixed dense table views with physical file size calculations and proper text-wrapping.</li>
+                            </ul>
+                            <h4>v3.3.0</h4>
                             <ul>
                                 <li><strong>Explorer View Controls:</strong> Switch between Tiles, Details, and List layouts for all grids.</li>
                                 <li><strong>Documentation Overhaul:</strong> Completely rewrote the Info Guide to reflect modern features.</li>
@@ -469,6 +477,7 @@
         <span id="batch-count" style="font-weight: 600;">0 selected</span>
         <button id="batch-read-btn" class="btn secondary-btn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">👁️ Read</button>
         <button id="batch-unread-btn" class="btn secondary-btn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">📖 Unread</button>
+        <button id="batch-move-btn" class="btn secondary-btn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">📁 Move</button>
         <button id="batch-megathread-btn" class="btn primary-btn" style="background:var(--accent-color); padding:0.4rem 0.8rem; font-size:0.85rem;">🧵 Megathread</button>
         <button id="batch-delete-btn" class="btn secondary-btn" style="color:var(--error-text); padding:0.4rem 0.8rem; font-size:0.85rem;">🗑️ Delete</button>
         <button id="batch-cancel-btn" style="background:none;border:none;cursor:pointer;font-size:1.2rem;margin-left:0.5rem;color:var(--text-muted);">✖</button>
@@ -476,6 +485,27 @@
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- Move Files Modal -->
+    <dialog id="move-modal" class="custom-modal" style="border: none; border-radius: 12px; background: var(--bg-card); color: var(--text-color); max-width: 400px; width: 90%; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+            <h2 style="margin: 0; font-size: 1.2rem;">Move Items</h2>
+        </div>
+        <div style="padding: 1.5rem;">
+            <p style="margin-top: 0; color: var(--text-muted); font-size: 0.9rem;">Select an existing destination or type a new one.</p>
+            <div style="margin-bottom: 1rem;">
+                <label style="display:block; margin-bottom: 0.5rem; font-weight: 500;">Destination</label>
+                <select id="move-destination-select" style="width: 100%; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; margin-bottom: 0.5rem; font-size: 1rem;">
+                    <!-- Options populated by JS -->
+                </select>
+                <input type="text" id="move-destination-input" placeholder="Or type a new folder name..." style="width: 100%; padding: 0.75rem; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 8px; font-size: 1rem; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <button id="move-cancel-btn" class="btn secondary-btn" style="padding: 0.5rem 1rem;">Cancel</button>
+                <button id="move-confirm-btn" class="btn primary-btn" style="padding: 0.5rem 1rem;">Confirm Move</button>
+            </div>
+        </div>
+    </dialog>
 
     <!-- Global Add Content Modal -->
     <dialog id="global-add-modal" class="custom-modal" style="border: none; border-radius: 12px; background: var(--bg-card); color: var(--text-color); max-width: 600px; width: 90%; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">

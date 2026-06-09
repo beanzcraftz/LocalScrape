@@ -1623,6 +1623,7 @@ table {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
+    justify-content: space-between !important;
     text-align: left !important;
     padding: 1rem 1.5rem !important;
 }
@@ -1653,6 +1654,52 @@ table {
     margin-bottom: 0 !important;
     margin-right: 1rem !important;
     font-size: 1.5rem !important;
+}
+
+.layout-list > div .item-size,
+.layout-list > div p,
+.layout-list > div .book-stats,
+.layout-list > div .book-description,
+.layout-list > div .article-meta,
+.layout-list > div .book-date {
+    display: none !important;
+}
+
+.layout-list > div h3,
+.layout-details > div h3,
+.layout-list > div .book-title,
+.layout-details > div .book-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    word-break: break-word !important;
+    flex-grow: 1;
+}
+/* --- Sidebar Details & Summary --- */
+details.sidebar-details {
+    width: 100%;
+}
+details.sidebar-details > summary {
+    list-style: none; /* Hide default triangle in some browsers */
+}
+details.sidebar-details > summary::-webkit-details-marker {
+    display: none;
+}
+details.sidebar-details > summary::after {
+    content: '▶';
+    font-size: 0.7rem;
+    position: absolute;
+    right: 1rem;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+details.sidebar-details[open] > summary::after {
+    transform: rotate(90deg);
+}
+.nested-list {
+    padding-left: 1rem;
+    margin-top: 0.5rem;
+    border-left: 1px solid var(--border-color);
+    margin-left: 1rem;
 }
 
 .layout-list h3, .layout-details h3 {

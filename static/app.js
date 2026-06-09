@@ -163,6 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const batchMegathreadBtn = document.getElementById('batch-megathread-btn');
     const batchDeleteBtn = document.getElementById('batch-delete-btn');
     const batchCancelBtn = document.getElementById('batch-cancel-btn');
+    const batchMoveBtn = document.getElementById('batch-move-btn');
+    const moveModal = document.getElementById('move-modal');
+    const moveDestSelect = document.getElementById('move-destination-select');
+    const moveDestInput = document.getElementById('move-destination-input');
+    const moveConfirmBtn = document.getElementById('move-confirm-btn');
+    const moveCancelBtn = document.getElementById('move-cancel-btn');
 
     // --- View Layout Toggles ---
     const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
@@ -352,6 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Sidebar & Data Loading ---
+    const sidebarNewsTags = document.getElementById('sidebar-news-tags');
+    const sidebarBooksCategories = document.getElementById('sidebar-books-categories');
+
     async function loadTags() {
         try {
             const res = await fetch('/api/tags?t=' + Date.now(), { cache: "no-store" });
@@ -362,25 +371,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderTags(tags) {
-        tagsList.innerHTML = '';
-        tagDatalist.innerHTML = '';
-        
-        // Add Favorites to sidebar
-        const favSidebar = document.createElement('li');
-        favSidebar.className = 'tag-item';
-        favSidebar.innerHTML = `
-            <div class="tag-header">
-                <span class="folder-icon" style="flex-grow:1; display:flex; align-items:center; color:gold;">★ Favorites</span>
-            </div>
-        `;
-        favSidebar.addEventListener('click', openFavoritesView);
-        tagsList.appendChild(favSidebar);
+    async function loadBooksSidebar() {
+        try {
+            const res = await fetch('/api/books');
+            if (res.ok) {
+                const data = await res.json();
+                const categories = [...new Set(data.books.map(b => b.tag || 'uncategorized'))].sort();
+                if (sidebarBooksCategories) {
+                    sidebarBooksCategories.innerHTML = '';
+                    categories.forEach(cat => {
+                        const li = document.createElement('li');
+                        li.className = 'tag-item';
+                        li.innerHTML = `<span class="folder-icon" style="flex-grow:1; display:flex; align-items:center; padding: 0.5rem 0;">📚 ${cat}</span>`;
+                        li.style.cursor = 'pointer';
+                        li.addEventListener('click', () => {
+                            switchView('books');
+                        });
+                        sidebarBooksCategories.appendChild(li);
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load books for sidebar:', err);
+        }
+    }
 
-        tags.forEach(tag => {
-            const option = document.createElement('option');
-            option.value = tag;
-            tagDatalist.appendChild(option);
+    function renderTags(tags) {
+        if (sidebarNewsTags) sidebarNewsTags.innerHTML = '';
+        if (tagDatalist) tagDatalist.innerHTML = '';
+
+        tags.forEach(tagObj => {
+            const tag = tagObj.name;
+            const size = tagObj.size;
+            
+            if (tagDatalist) {
+                const option = document.createElement('option');
+                option.value = tag;
+                tagDatalist.appendChild(option);
+            }
 
             const li = document.createElement('li');
             li.className = 'tag-item';
@@ -389,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
             header.className = 'tag-header';
             header.innerHTML = `
                 <span class="folder-icon" style="flex-grow:1; display:flex; align-items:center;">📁 ${tag}</span>
+                <span class="item-size" style="color:var(--text-muted); font-size: 0.85rem; margin-left: auto; margin-right: 0.5rem;">${size}</span>
                 <span class="tag-actions">
                     <button class="rename-tag" title="Rename Tag" style="background:none;border:none;cursor:pointer;font-size:0.8rem;margin-right:4px;">✏️</button>
                     <button class="delete-tag" title="Delete Tag" style="background:none;border:none;cursor:pointer;font-size:0.8rem">🗑️</button>
@@ -458,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             li.appendChild(header);
             li.appendChild(articlesContainer);
-            tagsList.appendChild(li);
+            if (sidebarNewsTags) sidebarNewsTags.appendChild(li);
         });
     }
 
@@ -677,19 +706,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     tile.className = 'book-tile';
                     const d = new Date(b.added_at * 1000).toLocaleDateString();
                     const icon = b.ext === '.pdf' ? '📄' : '📖';
-                    
+                    const size = b.size || "0 B";
                     tile.innerHTML = `
-                        <div class="book-actions">
+                        <div class="book-actions" style="display:flex; align-items:center;">
+                            <input type="checkbox" class="book-checkbox" data-id="${b.id}" style="margin-right:0.5rem; width:1.2rem; height:1.2rem; cursor:pointer;">
                             <button class="book-action-btn edit-btn" title="Rename Book">✏️</button>
                             <button class="book-action-btn delete-btn" title="Delete Book">🗑️</button>
                         </div>
                         <div class="book-icon">${icon}</div>
-                        <div class="book-tile-title">${b.title}</div>
-                        <div class="book-tile-meta">${b.ext.toUpperCase().replace('.','')} · Added ${d}</div>
+                        <h3 class="book-title" style="font-size: 1rem; margin: 0.5rem 0;">${b.title}</h3>
+                        <div class="book-tile-meta" style="color: var(--text-muted); font-size: 0.85rem;">
+                            <span class="book-date">Added ${d}</span>
+                            <span class="item-size" style="float: right;">${size}</span>
+                        </div>
                     `;
                     
+                    const checkbox = tile.querySelector('.book-checkbox');
+                    checkbox.checked = selectedArticles.has(b.id);
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) selectedArticles.add(b.id);
+                        else selectedArticles.delete(b.id);
+                        updateBatchPanel();
+                    });
+                    checkbox.addEventListener('click', e => e.stopPropagation());
+                    
                     tile.onclick = (e) => {
-                        if (e.target.closest('.book-action-btn')) return;
+                        if (e.target.closest('.book-action-btn') || e.target.closest('.book-checkbox')) return;
                         openBook(b.id, b.ext);
                     };
                     
@@ -2121,6 +2163,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    if (batchMoveBtn && moveModal) {
+        batchMoveBtn.addEventListener('click', async () => {
+            // Determine if we are moving books or articles
+            const isBooks = !booksView.classList.contains('hidden');
+            const type = isBooks ? "book" : "article";
+            moveModal.dataset.moveType = type;
+            
+            // Populate select box
+            moveDestSelect.innerHTML = '<option value="">Select an existing destination...</option>';
+            if (isBooks) {
+                try {
+                    const res = await fetch('/api/books');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const categories = [...new Set(data.books.map(b => b.tag || 'uncategorized'))].sort();
+                        categories.forEach(cat => {
+                            moveDestSelect.innerHTML += `<option value="${cat}">📁 ${cat}</option>`;
+                        });
+                    }
+                } catch (e) {}
+            } else {
+                try {
+                    const res = await fetch('/api/tags?t=' + Date.now(), { cache: "no-store" });
+                    if (res.ok) {
+                        const data = await res.json();
+                        data.tags.forEach(tObj => {
+                            moveDestSelect.innerHTML += `<option value="${tObj.name}">📁 ${tObj.name}</option>`;
+                        });
+                    }
+                } catch (e) {}
+            }
+            
+            moveDestInput.value = '';
+            moveModal.showModal();
+        });
+        
+        moveCancelBtn.addEventListener('click', () => {
+            moveModal.close();
+        });
+        
+        moveConfirmBtn.addEventListener('click', async () => {
+            const dest = moveDestInput.value.trim() || moveDestSelect.value;
+            if (!dest) {
+                alert("Please select or enter a destination.");
+                return;
+            }
+            
+            const type = moveModal.dataset.moveType;
+            const items = Array.from(selectedArticles);
+            
+            try {
+                const res = await fetch('/api/move', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ items, destination: dest, type })
+                });
+                
+                if (res.ok) {
+                    showToast(`Moved ${items.length} items to ${dest}`);
+                    moveModal.close();
+                    selectedArticles.clear();
+                    updateBatchPanel();
+                    
+                    if (type === 'book') {
+                        renderBooksGrid();
+                        loadBooksSidebar();
+                    } else {
+                        loadTags();
+                        if (currentArticleTag) loadArticles(currentArticleTag, tagArticlesList);
+                        else switchView('library');
+                    }
+                } else {
+                    const err = await res.json();
+                    alert("Move failed: " + err.detail);
+                }
+            } catch (err) {
+                console.error("Failed to move", err);
+                alert("Failed to move items.");
+            }
+        });
+    }
 
     // --- Settings UI Logic ---
     async function loadSettings() {
@@ -2253,9 +2376,19 @@ document.addEventListener('DOMContentLoaded', () => {
     updateOnlineStatus();
     handleSharedURLs();
     switchView('library');
+    
+    const navFavsBtn = document.getElementById('nav-favs-btn');
+    if (navFavsBtn) {
+        navFavsBtn.addEventListener('click', () => {
+            // Need to ensure openFavoritesView works.
+            openFavoritesView();
+        });
+    }
+    
     loadFavorites().then(() => {
         loadReadStates().then(() => {
             loadTags();
+            loadBooksSidebar();
         });
     });
     loadStorage();

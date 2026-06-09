@@ -1,9 +1,17 @@
 # Changelog
 
-## v3.1.0
+## v3.4.0
+### Major Features & UI/UX Overhaul
+- **Hierarchical Sidebar:** Restructured the sidebar into a native collapsible HTML tree.
+- **Batch Move Engine:** Powerful new "Move Files" feature built directly into the floating Multi-Select Action Panel. Relocate books to new categories or articles to new tags with a single click.
+- **List & Details Layouts:** Fixed dense table views with physical file size calculations and proper text-wrapping so long file names are no longer truncated.
+
+## v3.3.0
 ### UI Restructure & Enhancements
-- **Global Ingestion Modal:** Replaced the legacy Add Articles and RSS Feeds sidebar pages with a streamlined, global "➕ Add Content" modal accessible from anywhere in the app.
-- **Widescreen Layout Safeguards:** Enforced rigid DOM max-width constraints on ultra-wide monitors and killed horizontal scroll-bars globally.
+- **Explorer View Controls:** Added Windows Explorer-style view toggles to switch between grid, list, and details.
+- **Documentation Overhaul:** Rewrote the info guide to cover modern ingestion methods.
+
+## v3.1.0
 
 ## v2.1.0
 Settings Dashboard (manage RSS polling, retentions, UI defaults, TTS preferences, Global Cookies) & Dynamic Configuration (backend jobs dynamically read settings without container restarts).
