@@ -1574,3 +1574,87 @@ table {
 .books-grid, .library-tiles-grid, .articles-grid, .library-tiles {
     width: 100%;
 }
+
+/* --- View Toggle Bar --- */
+.view-controls-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    background: var(--bg-card);
+    padding: 0.4rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: fit-content;
+}
+
+.view-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.view-toggle-btn:hover {
+    color: var(--text-color);
+    background: rgba(255,255,255,0.05);
+}
+
+.view-toggle-btn.active {
+    background: var(--accent-color);
+    color: var(--bg-main);
+}
+
+/* --- List & Details Layouts for Grids --- */
+.layout-details {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+}
+
+.layout-details > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    text-align: left !important;
+    padding: 1rem 1.5rem !important;
+}
+
+.layout-details > div .book-icon,
+.layout-details > div .folder-icon {
+    margin-bottom: 0 !important;
+    margin-right: 1.5rem !important;
+    font-size: 2.5rem !important;
+}
+
+.layout-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+.layout-list > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    text-align: left !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.layout-list > div .book-icon,
+.layout-list > div .folder-icon {
+    margin-bottom: 0 !important;
+    margin-right: 1rem !important;
+    font-size: 1.5rem !important;
+}
+
+.layout-list h3, .layout-details h3 {
+    margin: 0 !important;
+}
