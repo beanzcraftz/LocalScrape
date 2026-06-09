@@ -48,11 +48,13 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v2.2.0</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.0.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
-                    <button id="nav-library-btn" class="nav-btn active">📚 Library</button>
+                    <h3>Your Shelf</h3>
+                    <button id="nav-library-btn" class="nav-btn active">📰 News</button>
+                    <button id="nav-books-btn" class="nav-btn">📚 Books</button>
                 </div>
                 <h3>Management</h3>
                 <div class="sidebar-menu">
@@ -257,6 +259,27 @@
                 </section>
 
 
+
+                <!-- Books View -->
+                <section id="books-view" class="view hidden">
+                    <div class="card-header">
+                        <h2>Your Bookshelf</h2>
+                        <p>Upload and read your PDF and EPUB files natively.</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-zone" id="book-upload-zone" onclick="document.getElementById('book-file-input').click()">
+                            <p>Drag & Drop PDFs or EPUBs here, or click to select files</p>
+                            <input type="file" id="book-file-input" multiple accept=".pdf,.epub" style="display: none;">
+                        </div>
+                        <div id="book-upload-progress" class="hidden" style="margin-top: 1rem; color: var(--accent-color);">
+                            Uploading and processing books... Please wait.
+                        </div>
+                        
+                        <div id="books-grid" class="books-grid" style="margin-top: 2rem;">
+                            <!-- Books injected via JS -->
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Empty State View -->
                 <section id="empty-state-view" class="empty-state-view hidden">

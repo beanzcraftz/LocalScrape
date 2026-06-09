@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.0
+### Major Features
+- **The Bookshelf:** Introduced a native e-reading library. You can now bulk-upload `.pdf` and `.epub` files directly into LocalScrape.
+- **Native EPUB Processing:** Uploaded EPUB files are automatically unpacked, stripped of bloated HTML styling, and converted into pure Markdown to be read in the standard LocalScrape reader (with full reading progress support).
+- **Embedded PDFs:** PDFs are seamlessly integrated and loaded in a sandboxed viewer while maintaining the zero-database, flat-file architecture.
+
 ## v2.2.0
 ### New Features
 - **Resume Reading Tracker:** Added a persistent progress tracker that remembers your scroll position within an article and prompts you to seamlessly resume where you left off when reopening it.

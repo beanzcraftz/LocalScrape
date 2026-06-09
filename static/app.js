@@ -81,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     
     const navLibraryBtn = document.getElementById('nav-library-btn');
+    const navBooksBtn = document.getElementById('nav-books-btn');
     const navDashboardBtn = document.getElementById('nav-dashboard-btn');
     const navRssBtn = document.getElementById('nav-rss-btn');
     const navActivityBtn = document.getElementById('nav-activity-btn');
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navSettingsBtn = document.getElementById('nav-settings-btn');
     
     const activityMonitorView = document.getElementById('activity-monitor-view');
+    const booksView = document.getElementById('books-view');
     const infoView = document.getElementById('info-view');
     const settingsView = document.getElementById('settings-view');
     const rssView = document.getElementById('rss-view');
@@ -158,6 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const batchMegathreadBtn = document.getElementById('batch-megathread-btn');
     const batchDeleteBtn = document.getElementById('batch-delete-btn');
     const batchCancelBtn = document.getElementById('batch-cancel-btn');
+    
+    const bookFileInput = document.getElementById('book-file-input');
+    const bookUploadProgress = document.getElementById('book-upload-progress');
+    const booksGrid = document.getElementById('books-grid');
 
     let currentArticleTag = null;
     let currentArticleFilename = null;
@@ -472,6 +478,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settingsView.classList.add('hidden');
         rssView.classList.add('hidden');
         emptyStateView.classList.add('hidden');
+        booksView.classList.add('hidden');
         readerControls.classList.add('hidden');
         libraryView.classList.add('hidden');
         tagArticlesView.classList.add('hidden');
@@ -508,6 +515,10 @@ document.addEventListener('DOMContentLoaded', () => {
             readerControls.classList.remove('hidden');
         } else if (viewName === 'empty-state') {
             emptyStateView.classList.remove('hidden');
+        } else if (viewName === 'books') {
+            booksView.classList.remove('hidden');
+            if (navBooksBtn) navBooksBtn.classList.add('active');
+            renderBooksGrid();
         }
         
         // Close mobile sidebar if open
@@ -518,6 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     navLibraryBtn.addEventListener('click', () => switchView('library'));
+    if (navBooksBtn) navBooksBtn.addEventListener('click', () => switchView('books'));
     navDashboardBtn.addEventListener('click', () => switchView('dashboard'));
     navRssBtn.addEventListener('click', () => switchView('rss'));
     navActivityBtn.addEventListener('click', () => switchView('activity'));
@@ -525,6 +537,118 @@ document.addEventListener('DOMContentLoaded', () => {
     if (navSettingsBtn) navSettingsBtn.addEventListener('click', () => switchView('settings'));
     
     emptyStateDashboardBtn.addEventListener('click', () => switchView('library'));
+
+    // --- Bookshelf Logic ---
+    if (bookFileInput) {
+        bookFileInput.addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+            
+            bookUploadProgress.classList.remove('hidden');
+            
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files', files[i]);
+            }
+            
+            try {
+                const res = await fetch('/api/books/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (!res.ok) throw new Error('Upload failed');
+                showToast("✅ Books uploaded successfully!");
+                renderBooksGrid();
+            } catch (err) {
+                console.error(err);
+                showToast("❌ Failed to upload books.");
+            } finally {
+                bookUploadProgress.classList.add('hidden');
+                bookFileInput.value = ''; // Reset
+            }
+        });
+    }
+
+    async function renderBooksGrid() {
+        if (!booksGrid) return;
+        booksGrid.innerHTML = '<p>Loading books...</p>';
+        try {
+            const res = await fetch('/api/books');
+            if (!res.ok) throw new Error('Failed to fetch books');
+            const data = await res.json();
+            
+            booksGrid.innerHTML = '';
+            if (!data.books || data.books.length === 0) {
+                booksGrid.innerHTML = '<p style="color:var(--text-muted); grid-column: 1/-1;">Your shelf is empty. Upload a PDF or EPUB to get started!</p>';
+                return;
+            }
+            
+            data.books.forEach(b => {
+                const tile = document.createElement('div');
+                tile.className = 'book-tile';
+                const d = new Date(b.added_at * 1000).toLocaleDateString();
+                const icon = b.ext === '.pdf' ? '📄' : '📖';
+                tile.innerHTML = `
+                    <div class="book-icon">${icon}</div>
+                    <div class="book-tile-title">${b.title}</div>
+                    <div class="book-tile-meta">${b.ext.toUpperCase().replace('.','')} · Added ${d}</div>
+                `;
+                tile.onclick = () => openBook(b.id, b.ext);
+                booksGrid.appendChild(tile);
+            });
+        } catch (err) {
+            console.error(err);
+            booksGrid.innerHTML = '<p style="color:var(--error-text);">Failed to load books.</p>';
+        }
+    }
+
+    async function openBook(bookId, ext) {
+        if (ext === '.epub') {
+            // Treat as standard article mapped to the 'books' tag folder
+            openArticle('books', bookId.replace('.epub', '.md'));
+            return;
+        }
+        
+        if (ext === '.pdf') {
+            currentArticleTag = 'books';
+            currentArticleFilename = bookId;
+            switchView('reader');
+            
+            // Clear standard markdown content
+            markdownContent.innerHTML = '';
+            
+            // Check for progress
+            let pageHash = '';
+            try {
+                const progRes = await fetch('/api/progress');
+                if (progRes.ok) {
+                    const progressData = await progRes.json();
+                    const path = 'books/' + bookId;
+                    const savedPos = progressData[path];
+                    if (savedPos && savedPos > 0) {
+                        resumePrompt.classList.remove('hidden');
+                        
+                        resumeYesBtn.onclick = () => {
+                            const iframe = document.getElementById('pdf-frame');
+                            if (iframe) {
+                                iframe.src = `/api/books/file/${bookId}#page=${savedPos}`;
+                            }
+                            resumePrompt.classList.add('hidden');
+                        };
+                        resumeNoBtn.onclick = () => {
+                            resumePrompt.classList.add('hidden');
+                        };
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to load PDF reading progress:", err);
+            }
+            
+            // Inject iframe
+            markdownContent.innerHTML = `<iframe id="pdf-frame" src="/api/books/file/${bookId}${pageHash}" width="100%" height="80vh" style="border:none; height:80vh; min-height: 600px;"></iframe>`;
+            endOfArticle.classList.add('hidden');
+        }
+    }
 
     // --- Library Tiles ---
     async function renderLibraryTiles() {

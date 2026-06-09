@@ -1433,3 +1433,68 @@ input:checked + .slider:before {
         opacity: 1;
     }
 }
+
+/* --------------------------------------------------------------------------
+   Bookshelf View
+-------------------------------------------------------------------------- */
+.upload-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--bg-elevated);
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+}
+
+.upload-zone:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.book-tile {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.book-tile:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.book-tile-title {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-color);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.book-tile-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: auto;
+}
+
+.book-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}

@@ -47,6 +47,9 @@ import time
 import zipfile
 import tempfile
 import shutil
+import ebooklib
+from ebooklib import epub
+from bs4 import BeautifulSoup
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -55,7 +58,7 @@ from urllib.parse import quote, unquote
 
 import feedparser
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI, HTTPException, Path as FPath, Query
+from fastapi import FastAPI, HTTPException, Path as FPath, Query, UploadFile, File
 from fastapi.responses import PlainTextResponse, FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl, field_validator
@@ -81,6 +84,8 @@ FAILED_FILE = BASE / "failed.json"
 COMPLETED_FILE = BASE / "completed.json"
 COOKIES_FILE = BASE / "cookies.json"
 FAVORITES_FILE = BASE / "favorites.json"
+BOOKS_DIR = BASE / "books"
+BOOKS_DIR.mkdir(parents=True, exist_ok=True)
 MAX_ATTEMPTS = 3  # URL is permanently failed after this many total attempts
 
 # ---------------------------------------------------------------------------
@@ -827,7 +832,88 @@ async def get_analysis():
     return {"analysis": analysis}
 
 
+@app.post("/api/books/upload")
+async def upload_books(files: list[UploadFile] = File(...)):
+    results = []
+    for f in files:
+        if not f.filename:
+            continue
+        safe_name = "".join(c for c in f.filename if c.isalnum() or c in " ._-")
+        if not safe_name:
+            continue
+            
+        ext = Path(safe_name).suffix.lower()
+        if ext not in [".pdf", ".epub"]:
+            continue
+            
+        book_id = safe_name
+        dest_path = BOOKS_DIR / safe_name
+        
+        # Save raw file
+        content = await f.read()
+        dest_path.write_bytes(content)
+        
+        title = Path(safe_name).stem
+        
+        if ext == ".epub":
+            try:
+                # Parse EPUB
+                book = epub.read_epub(str(dest_path))
+                parsed_title = book.get_metadata("DC", "title")
+                if parsed_title:
+                    title = parsed_title[0][0]
+                
+                md_content = f"---\ntitle: {title}\ndate_scraped: {datetime.now(timezone.utc).isoformat()}\n---\n\n# {title}\n\n"
+                
+                for item in book.get_items():
+                    if item.get_type() == ebooklib.ITEM_DOCUMENT:
+                        html_bytes = item.get_body_content()
+                        soup = BeautifulSoup(html_bytes, "html.parser")
+                        for element in soup(["script", "style"]):
+                            element.extract()
+                        md_content += soup.get_text(separator="\n", strip=True) + "\n\n"
+                
+                md_path = BOOKS_DIR / f"{Path(safe_name).stem}.md"
+                md_path.write_text(md_content, encoding="utf-8")
+            except Exception as e:
+                logging.error(f"Failed to parse EPUB {safe_name}: {e}")
+                
+        # Save metadata
+        meta = {
+            "id": book_id,
+            "title": title,
+            "ext": ext,
+            "added_at": time.time()
+        }
+        _save_json(BOOKS_DIR / f"{book_id}.meta.json", meta)
+        results.append(meta)
+        
+    return {"status": "ok", "uploaded": results}
 
+
+@app.get("/api/books")
+async def list_books():
+    books = []
+    for f in BOOKS_DIR.glob("*.meta.json"):
+        try:
+            meta = _load_json(f, {})
+            if meta:
+                books.append(meta)
+        except Exception:
+            pass
+    books.sort(key=lambda x: x.get("added_at", 0), reverse=True)
+    return {"books": books}
+
+
+@app.get("/api/books/file/{filename}")
+async def get_book_file(filename: str):
+    safe_name = "".join(c for c in filename if c.isalnum() or c in " ._-")
+    filepath = BOOKS_DIR / safe_name
+    if not filepath.is_file():
+        raise HTTPException(status_code=404, detail="Book file not found.")
+    
+    media_type = "application/pdf" if safe_name.endswith(".pdf") else "application/epub+zip"
+    return FileResponse(filepath, media_type=media_type)
 @app.get("/api/articles/{tag}", response_model=ArticlesResponse)
 async def list_articles(
     tag: Annotated[str, FPath(description="Tag / category folder name")],
