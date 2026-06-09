@@ -1694,6 +1694,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Swiped right -> Next article
             if (nextArticleBtn) nextArticleBtn.click();
         }
+    }
+
     // --- Offline Detection ---
     const offlinePill = document.getElementById('offline-pill');
     function updateOnlineStatus() {
