@@ -1680,6 +1680,23 @@ details.sidebar-details {
 }
 details.sidebar-details > summary {
     list-style: none; /* Hide default triangle in some browsers */
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    outline: none;
+    border-radius: 6px;
+    transition: var(--transition);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+details.sidebar-details > summary:hover {
+    background-color: var(--bg-main);
+    color: var(--accent-color);
 }
 details.sidebar-details > summary::-webkit-details-marker {
     display: none;
@@ -1704,4 +1721,47 @@ details.sidebar-details[open] > summary::after {
 
 .layout-list h3, .layout-details h3 {
     margin: 0 !important;
+}
+
+/* --- UI/UX Enhancements --- */
+
+/* Sidebar Cleanups */
+.sidebar .item-size,
+.sidebar .tag-actions,
+.sidebar .book-actions {
+    display: none !important;
+}
+
+/* Settings Dashboard Glow-Up */
+#settings-view .form-control,
+#settings-view select,
+#settings-view input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: var(--transition);
+}
+
+#settings-view .form-control:focus,
+#settings-view select:focus,
+#settings-view input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+#settings-view input[type="range"] {
+    width: 100%;
+    margin-top: 0.5rem;
+    cursor: pointer;
+    accent-color: var(--accent-color);
+}
+
+/* Better breathing room for setting rows */
+#settings-view .form-group {
+    margin-bottom: 1.5rem !important;
 }
