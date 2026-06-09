@@ -204,7 +204,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const bookFileInput = document.getElementById('book-file-input');
     const bookUploadProgress = document.getElementById('book-upload-progress');
-    const booksGrid = document.getElementById('books-grid');
 
     let currentArticleTag = null;
     let currentArticleFilename = null;
@@ -1423,10 +1422,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function startQueuePolling() {
         if (!pollInterval) {
             checkQueue(); // check immediately
-            // Initialization
-    setInterval(updateStorageBadge, 120000); // Check storage every 2 min
-    applyViewLayout(currentLayout);
-    loadSettings();    }
+            pollInterval = setInterval(checkQueue, 3000); // then every 3s
+        }
     }
 
     function stopQueuePolling() {
@@ -2144,7 +2141,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 const ttsSpeed = data.tts_default_speed || 1.0;
                 document.getElementById('setting-tts-speed').value = ttsSpeed;
-                document.getElementById('setting-tts-speed-val').textContent = ttsSpeed;
                 
                 document.getElementById('setting-global-cookies').value = data.global_cookies || '';
 
@@ -2248,11 +2244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ttsSpeedInput = document.getElementById('setting-tts-speed');
-    if (ttsSpeedInput) {
-        ttsSpeedInput.addEventListener('input', (e) => {
-            document.getElementById('setting-tts-speed-val').textContent = e.target.value;
-        });
-    }
+    // Removed setting-tts-speed-val update since it's a number input
 
     // Load initial settings on boot to apply theme/typography globally immediately
     fetch('/api/settings').then(res => res.json()).then(data => applySettingsToDOM(data)).catch(() => {});
@@ -2268,4 +2260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     loadStorage();
     checkQueue(); // Check if anything is pending on initial load
+    setInterval(updateStorageBadge, 120000); // Check storage every 2 min
+    applyViewLayout(currentLayout);
+    loadSettings();
 });
