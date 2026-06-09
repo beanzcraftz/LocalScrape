@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         li.innerHTML = `<span class="folder-icon" style="flex-grow:1; display:flex; align-items:center; padding: 0.5rem 0;">📚 ${cat}</span>`;
                         li.style.cursor = 'pointer';
                         li.addEventListener('click', () => {
-                            switchView('books');
+                            switchView('books', cat);
                         });
                         sidebarBooksCategories.appendChild(li);
                     });
@@ -535,12 +535,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- View Management ---
-    function switchView(viewName) {
+    function switchView(viewName, subParam = null) {
         if (librarySearch) librarySearch.value = '';
         if (tagSearch) tagSearch.value = '';
         if (readingProgress) readingProgress.style.width = '0%';
         
         readerView.classList.add('hidden');
+        if (readerView) readerView.classList.remove('pdf-mode');
         activityMonitorView.classList.add('hidden');
         infoView.classList.add('hidden');
         settingsView.classList.add('hidden');
@@ -578,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'books') {
             booksView.classList.remove('hidden');
             if (navBooksBtn) navBooksBtn.classList.add('active');
-            renderBooksGrid();
+            renderBooksGrid(subParam);
         }
         
         // Close mobile sidebar if open
@@ -665,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function renderBooksGrid() {
+    async function renderBooksGrid(selectedCategory = null) {
         if (!booksGrid) return;
         booksGrid.innerHTML = '<p>Loading books...</p>';
         try {
@@ -684,6 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const groups = {};
             data.books.forEach(b => {
                 const t = b.tag || "uncategorized";
+                if (selectedCategory && t !== selectedCategory) return;
                 if (!groups[t]) groups[t] = [];
                 groups[t].push(b);
             });
@@ -785,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentArticleTag = 'books';
             currentArticleFilename = bookId;
             switchView('reader');
+            if (readerView) readerView.classList.add('pdf-mode');
             
             // Clear standard markdown content
             markdownContent.innerHTML = '';

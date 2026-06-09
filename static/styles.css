@@ -1765,3 +1765,10 @@ details.sidebar-details[open] > summary::after {
 #settings-view .form-group {
     margin-bottom: 1.5rem !important;
 }
+
+/* Full Width for PDF Reader */
+.pdf-mode {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+}
