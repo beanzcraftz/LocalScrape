@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const queueStatus = document.getElementById('queue-status');
     const queueText = document.getElementById('queue-text');
     
-    const controlCard = document.getElementById('control-card');
     const readerView = document.getElementById('reader-view');
     const markdownContent = document.getElementById('markdown-content');
     const closeReaderBtn = document.getElementById('close-reader-btn');
@@ -97,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const booksView = document.getElementById('books-view');
     const infoView = document.getElementById('info-view');
     const settingsView = document.getElementById('settings-view');
-    const rssView = document.getElementById('rss-view');
     const rssUrlInput = document.getElementById('rss-url-input');
     const rssTagInput = document.getElementById('rss-tag-input');
     const rssKeywordsInput = document.getElementById('rss-keywords-input');
@@ -476,12 +474,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tagSearch) tagSearch.value = '';
         if (readingProgress) readingProgress.style.width = '0%';
         
-        controlCard.classList.add('hidden');
         readerView.classList.add('hidden');
         activityMonitorView.classList.add('hidden');
         infoView.classList.add('hidden');
         settingsView.classList.add('hidden');
-        rssView.classList.add('hidden');
         emptyStateView.classList.add('hidden');
         booksView.classList.add('hidden');
         readerControls.classList.add('hidden');
@@ -1811,7 +1807,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sharedUrl = urlParams.get('url') || urlParams.get('text');
 
         if (sharedUrl && sharedUrl.startsWith('http')) {
-            if (navDashboardBtn) navDashboardBtn.click(); 
+            if (headerAddBtn) headerAddBtn.click(); 
             if (urlsInput) urlsInput.value = sharedUrl;
             window.history.replaceState({}, document.title, "/");
             showToast("🔗 URL caught from share sheet!");
