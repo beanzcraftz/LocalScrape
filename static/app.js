@@ -1688,11 +1688,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (touchendX < touchstartX - swipeThreshold) {
-            // Swiped left -> Back to library
-            if (closeReaderBtn) closeReaderBtn.click();
-        } else if (touchendX > touchstartX + swipeThreshold) {
-            // Swiped right -> Next article
+            // Swiped left -> Next article
             if (nextArticleBtn) nextArticleBtn.click();
+        } else if (touchendX > touchstartX + swipeThreshold) {
+            // Swiped right -> Back to library
+            if (closeReaderBtn) closeReaderBtn.click();
         }
     }
 
