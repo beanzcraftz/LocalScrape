@@ -1688,34 +1688,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (touchendX < touchstartX - swipeThreshold) {
-            // Swiped left -> Next article
-            if (nextArticleBtn) nextArticleBtn.click();
-        } else if (touchendX > touchstartX + swipeThreshold) {
-            // Swiped right -> Back to library
+            // Swiped left -> Back to library
             if (closeReaderBtn) closeReaderBtn.click();
+        } else if (touchendX > touchstartX + swipeThreshold) {
+            // Swiped right -> Next article
+            if (nextArticleBtn) nextArticleBtn.click();
         }
-    }
-
-    // --- Swipe Gestures for Resume Prompt ---
-    let promptTouchStartX = 0;
-    
-    if (resumePrompt) {
-        resumePrompt.addEventListener('touchstart', e => {
-            promptTouchStartX = e.changedTouches[0].screenX;
-        }, {passive: true});
-
-        resumePrompt.addEventListener('touchend', e => {
-            let promptTouchEndX = e.changedTouches[0].screenX;
-            if (promptTouchEndX < promptTouchStartX - 40) {
-                // Swiped left -> No (Dismiss)
-                if (resumeNoBtn) resumeNoBtn.click();
-            } else if (promptTouchEndX > promptTouchStartX + 40) {
-                // Swiped right -> Yes (Resume)
-                if (resumeYesBtn) resumeYesBtn.click();
-            }
-        }, {passive: true});
-    }
-
     // --- Offline Detection ---
     const offlinePill = document.getElementById('offline-pill');
     function updateOnlineStatus() {
