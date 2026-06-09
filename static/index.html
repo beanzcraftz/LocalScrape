@@ -48,7 +48,7 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.0.0</span></h2>
+                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.1.0</span></h2>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
@@ -58,8 +58,6 @@
                 </div>
                 <h3>Management</h3>
                 <div class="sidebar-menu">
-                    <button id="nav-dashboard-btn" class="nav-btn">Add Articles/Links</button>
-                    <button id="nav-rss-btn" class="nav-btn">RSS Feeds</button>
                     <button id="nav-activity-btn" class="nav-btn">Activity Monitor</button>
                     <button id="nav-info-btn" class="nav-btn">Info Guide</button>
                     <button id="nav-settings-btn" class="nav-btn">⚙️ Settings</button>
@@ -83,6 +81,7 @@
             <header class="top-header">
                 <div class="header-left">
                     <button id="mobile-menu-btn" class="mobile-menu-btn">☰</button>
+                    <button id="header-add-btn" class="btn primary-btn btn-sm" style="margin-left: 0.5rem;">➕ Add Content</button>
                     <div id="queue-status" class="queue-badge hidden">
                         <span class="status-dot"></span>
                         <span id="queue-text">Queue: 0 items</span>
@@ -106,22 +105,7 @@
             </header>
 
             <div class="content-scrollable">
-                <!-- Control Card (Scraping Form) -->
-                <section class="control-card" id="control-card">
-                    <div class="card-header">
-                        <h2>Add Articles</h2>
-                        <p>Paste URLs (one per line) and assign a tag.</p>
-                    </div>
-                    <div class="card-body">
-                        <textarea id="urls-input" placeholder="https://example.com/article1&#10;https://example.com/article2" rows="4"></textarea>
-                        <div class="input-row">
-                            <input type="text" id="tag-input" list="tag-datalist" placeholder="e.g., tech, news, research">
-                            <datalist id="tag-datalist"></datalist>
-                            <button id="scrape-btn" class="btn primary-btn">Scrape</button>
-                        </div>
-                        <div id="scrape-message" class="message hidden"></div>
-                    </div>
-                </section>
+                <!-- Control Card (Scraping Form) relocated to Modal -->
 
                 <!-- Library Tiles View (Default Home) -->
                 <section id="library-view" class="library-view">
@@ -233,30 +217,7 @@
                     </div>
                 </section>
 
-                <!-- RSS Feeds View -->
-                <section id="rss-view" class="control-card hidden">
-                    <div class="card-header">
-                        <h2>RSS Feeds</h2>
-                        <p>Automatically scrape articles every 2 hours from RSS/Atom feeds.</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="rss-form" style="display:flex; flex-direction:column; gap:1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color);">
-                            <input type="text" id="rss-url-input" placeholder="https://example.com/rss.xml">
-                            <div class="input-row">
-                                <input type="text" id="rss-tag-input" list="tag-datalist" placeholder="Tag (e.g. news)">
-                                <input type="text" id="rss-keywords-input" placeholder="Keywords (comma separated)">
-                                <button id="add-rss-btn" class="btn primary-btn" style="white-space:nowrap;">Add Feed</button>
-                            </div>
-                        </div>
-                        
-                        <div id="rss-list-container" style="margin-top: 1rem;">
-                            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem;">Active Feeds</p>
-                            <ul id="rss-list" style="list-style: none; display:flex; flex-direction:column; gap: 0.5rem;">
-                                <!-- RSS feeds injected via JS -->
-                            </ul>
-                        </div>
-                    </div>
-                </section>
+                <!-- RSS Feeds View relocated to Modal -->
 
 
 
@@ -264,17 +225,9 @@
                 <section id="books-view" class="view hidden">
                     <div class="card-header">
                         <h2>Your Bookshelf</h2>
-                        <p>Upload and read your PDF and EPUB files natively.</p>
+                        <p>Manage and read your PDF and EPUB files natively.</p>
                     </div>
                     <div class="card-body">
-                        <div class="upload-zone" id="book-upload-zone" onclick="document.getElementById('book-file-input').click()">
-                            <p>Drag & Drop PDFs or EPUBs here, or click to select files</p>
-                            <input type="file" id="book-file-input" multiple accept=".pdf,.epub" style="display: none;">
-                        </div>
-                        <div id="book-upload-progress" class="hidden" style="margin-top: 1rem; color: var(--accent-color);">
-                            Uploading and processing books... Please wait.
-                        </div>
-                        
                         <div id="books-grid" class="books-grid" style="margin-top: 2rem;">
                             <!-- Books injected via JS -->
                         </div>
@@ -309,30 +262,25 @@
                         <!-- Help & Docs Tab -->
                         <div id="tab-help-docs" class="tab-content">
                             <h3>How to use LocalScrape</h3>
-                            <p><strong>1. Add Articles/Links:</strong> Click the "Add Articles/Links" button in the sidebar. Paste one or more URLs into the text area. Select an existing tag from the dropdown, or type a new tag name. Click "Scrape" — articles are processed in the background and will appear in your Library under the chosen tag.</p>
+                            <p><strong>1. Add Content (Global Modal):</strong> Click the "➕ Add Content" button in the header. From here, you can easily queue up multiple Article URLs, set up automated RSS Feeds, or securely bulk-upload EPUB/PDF books into your Bookshelf!</p>
                             <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
-                                <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
+                                <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank when pasting URLs, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
                             </div>
                             
                             <h4 style="margin-top:1.25rem;">📡 RSS Feeds & Settings Dashboard</h4>
                             <p>Manage background automation and system preferences seamlessly using the <strong>⚙️ Settings</strong> dashboard in the sidebar:</p>
                             <ul style="padding-left:1.5rem; line-height:1.8;">
-                                <li><strong>RSS Feeds:</strong> Add feeds via the "RSS Feeds" sidebar. The system will poll automatically based on your <em>RSS Polling Interval</em> setting.</li>
+                                <li><strong>RSS Feeds:</strong> Add feeds via the Global Ingestion Modal. The system will poll automatically based on your <em>RSS Polling Interval</em> setting.</li>
                                 <li><strong>Retention Policy:</strong> The Settings dashboard allows you to define strict retention spans (in days) for older RSS articles and system log histories to prevent storage bloat.</li>
                                 <li><strong>UI & TTS Defaults:</strong> Customize your reading experience globally. Select a default theme, typography, font size, and native Text-to-Speech (TTS) voice and speed preferences.</li>
                                 <li><strong>Global Cookies:</strong> Inject your Netscape-formatted <code>cookies.txt</code> safely into the Scraping Engine directly from the UI to bypass soft paywalls.</li>
                             </ul>
                             
-                            <p style="margin-top:1.25rem;"><strong>3. Multi-Select Batch Actions & Megathreads:</strong></p>
+                            <p style="margin-top:1.25rem;"><strong>3. Multi-Select Batch Actions Panel & Megathreads:</strong></p>
                             <p>Inside any Tag or Library view, you can check the box next to multiple articles to spawn a floating Action Panel. From there, you can mark them all as Read/Unread, Delete them simultaneously, or click <strong>🧵 Megathread</strong> to stitch them together into a single, continuous reading digest.</p>
                             
                             <p style="margin-top:1.25rem;"><strong>4. Reader Power-Ups:</strong></p>
                             <ul style="padding-left:1.5rem; line-height:1.8;">
-                                <li><strong>Bionic Reading:</strong> Toggle the brain icon in the reader view to dynamically bold the first half of words, guiding your eyes for faster reading.</li>
-                                <li><strong>Teleprompter:</strong> Activate auto-scroll from the reader controls for hands-free reading.</li>
-                                <li><strong>Web Share Target (Mobile PWA):</strong> "Add to Homescreen" on your phone to install the Progressive Web App. You can then use your OS's native "Share" sheet to instantly push URLs from your mobile browser straight into LocalScrape's queue!</li>
-                            </ul>
-                            
                             <p style="margin-top:1.25rem;"><strong>5. Activity Monitor & Data Analysis:</strong> Track background queue statuses, job failures (up to 3 retries), and log outputs via the Activity Monitor. Review library footprints, read ratios, and total reading time aggregations dynamically overlaid across the dashboard tiles in the "Data Analysis" tab.</p>
                         </div>
                         
@@ -628,6 +576,57 @@
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="toast-container"></div>
+
+    <!-- Global Add Content Modal -->
+    <dialog id="global-add-modal" class="custom-modal" style="border: none; border-radius: 12px; background: var(--bg-card); color: var(--text-color); max-width: 600px; width: 90%; padding: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color);">
+            <h2 style="margin: 0; font-size: 1.25rem;">➕ Add Content</h2>
+            <button id="close-add-modal-btn" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div class="tab-bar" style="padding: 0 1.5rem; margin-top: 1rem; border-bottom: 1px solid var(--border-color);">
+            <button class="tab-btn active" data-add-tab="add-url">Article URLs</button>
+            <button class="tab-btn" data-add-tab="add-rss">RSS Feeds</button>
+            <button class="tab-btn" data-add-tab="add-book">Upload Books</button>
+        </div>
+        <div class="card-body" style="padding: 1.5rem;">
+            <!-- Article URL Tab -->
+            <div id="add-tab-url" class="add-tab-content">
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">Paste URLs (one per line) and assign an optional tag to scrape offline.</p>
+                <textarea id="urls-input" placeholder="https://example.com/article1&#10;https://example.com/article2" rows="4" style="width: 100%; max-width: 100%; box-sizing: border-box; background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; padding: 0.75rem; font-family: monospace;"></textarea>
+                <div class="input-row" style="margin-top: 1rem; display: flex; gap: 0.75rem;">
+                    <input type="text" id="tag-input" list="tag-datalist" placeholder="e.g., tech, news, research" style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-color);">
+                    <datalist id="tag-datalist"></datalist>
+                    <button id="scrape-btn" class="btn primary-btn" style="padding: 0.75rem 1.5rem;">Scrape</button>
+                </div>
+                <div id="scrape-message" class="message hidden" style="margin-top: 1rem; padding: 0.75rem; border-radius: 6px;"></div>
+            </div>
+            
+            <!-- RSS Feeds Tab -->
+            <div id="add-tab-rss" class="add-tab-content hidden">
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">Automatically scrape articles every few hours from RSS/Atom feeds.</p>
+                <div class="rss-form" style="display:flex; flex-direction:column; gap:1rem;">
+                    <input type="text" id="rss-url-input" placeholder="https://example.com/rss.xml" style="width: 100%; max-width: 100%; box-sizing: border-box; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-color);">
+                    <div class="input-row" style="display: flex; gap: 0.75rem;">
+                        <input type="text" id="rss-tag-input" list="tag-datalist" placeholder="Tag (e.g. news)" style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-color);">
+                        <input type="text" id="rss-keywords-input" placeholder="Keywords (comma separated)" style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-main); color: var(--text-color);">
+                        <button id="add-rss-btn" class="btn primary-btn" style="white-space:nowrap; padding: 0.75rem 1.5rem;">Add Feed</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Upload Books Tab -->
+            <div id="add-tab-book" class="add-tab-content hidden">
+                <p style="margin-bottom: 1rem; color: var(--text-muted);">Drag & Drop PDFs or EPUBs natively to your Bookshelf.</p>
+                <div class="upload-zone" id="book-upload-zone" onclick="document.getElementById('book-file-input').click()">
+                    <p>Select Files (.pdf, .epub)</p>
+                    <input type="file" id="book-file-input" multiple accept=".pdf,.epub" style="display: none;">
+                </div>
+                <div id="book-upload-progress" class="hidden" style="margin-top: 1rem; color: var(--accent-color); font-weight: 500; text-align: center;">
+                    Uploading and processing books... Please wait.
+                </div>
+            </div>
+        </div>
+    </dialog>
 
     <script src="/static/app.js"></script>
 </body>

@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.1.0
+### UI Restructure & Enhancements
+- **Global Ingestion Modal:** Replaced the legacy Add Articles and RSS Feeds sidebar pages with a streamlined, global "➕ Add Content" modal accessible from anywhere in the app.
+- **Widescreen Layout Safeguards:** Enforced rigid DOM max-width constraints on ultra-wide monitors and killed horizontal scroll-bars globally.
+
+## v2.1.0
+Settings Dashboard (manage RSS polling, retentions, UI defaults, TTS preferences, Global Cookies) & Dynamic Configuration (backend jobs dynamically read settings without container restarts).
+
+## v2.0.0
+Mobile PWA Enhancements (Web Share Target, swipe gestures), Reading Power-Ups (Read/Unread tracking, Bionic Reading, Teleprompter), Bulk Data Utilities (batch panel, Megathreads), Library Data Analysis (interactive metrics tab), and Canonical Duplication Safeguard.
+
+## v1.7.2
+Sidebar Navigation Fix.
+
 ## v3.0.0
 ### Major Features
 - **The Bookshelf:** Introduced a native e-reading library. You can now bulk-upload `.pdf` and `.epub` files directly into LocalScrape.

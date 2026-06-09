@@ -1498,3 +1498,25 @@ input:checked + .slider:before {
     font-size: 2rem;
     margin-bottom: 0.5rem;
 }
+
+/* --------------------------------------------------------------------------
+   Widescreen Prescriptive Fixes
+-------------------------------------------------------------------------- */
+html, body {
+    overflow-x: hidden;
+}
+
+.content-wrapper, .main-content, #settings-view, .tab-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+table {
+    width: 100%;
+    table-layout: auto;
+}
+
+.grid-container, .books-grid, .library-tiles-grid, .articles-grid {
+    width: 100%;
+}

@@ -82,11 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const navLibraryBtn = document.getElementById('nav-library-btn');
     const navBooksBtn = document.getElementById('nav-books-btn');
-    const navDashboardBtn = document.getElementById('nav-dashboard-btn');
-    const navRssBtn = document.getElementById('nav-rss-btn');
     const navActivityBtn = document.getElementById('nav-activity-btn');
     const navInfoBtn = document.getElementById('nav-info-btn');
     const navSettingsBtn = document.getElementById('nav-settings-btn');
+    
+    // Global Modal Elements
+    const headerAddBtn = document.getElementById('header-add-btn');
+    const globalAddModal = document.getElementById('global-add-modal');
+    const closeAddModalBtn = document.getElementById('close-add-modal-btn');
+    const modalTabBtns = globalAddModal ? globalAddModal.querySelectorAll('.tab-btn') : [];
+    const modalTabContents = globalAddModal ? globalAddModal.querySelectorAll('.add-tab-content') : [];
     
     const activityMonitorView = document.getElementById('activity-monitor-view');
     const booksView = document.getElementById('books-view');
@@ -492,13 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (viewName === 'tag-articles') {
             tagArticlesView.classList.remove('hidden');
             navLibraryBtn.classList.add('active');
-        } else if (viewName === 'dashboard') {
-            controlCard.classList.remove('hidden');
-            navDashboardBtn.classList.add('active');
-        } else if (viewName === 'rss') {
-            rssView.classList.remove('hidden');
-            navRssBtn.classList.add('active');
-            loadRssFeeds();
         } else if (viewName === 'activity') {
             activityMonitorView.classList.remove('hidden');
             navActivityBtn.classList.add('active');
@@ -530,13 +528,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     navLibraryBtn.addEventListener('click', () => switchView('library'));
     if (navBooksBtn) navBooksBtn.addEventListener('click', () => switchView('books'));
-    navDashboardBtn.addEventListener('click', () => switchView('dashboard'));
-    navRssBtn.addEventListener('click', () => switchView('rss'));
     navActivityBtn.addEventListener('click', () => switchView('activity'));
     navInfoBtn.addEventListener('click', () => switchView('info'));
     if (navSettingsBtn) navSettingsBtn.addEventListener('click', () => switchView('settings'));
     
     emptyStateDashboardBtn.addEventListener('click', () => switchView('library'));
+
+    // Global Add Content Modal Logic
+    if (headerAddBtn && globalAddModal) {
+        headerAddBtn.addEventListener('click', () => {
+            globalAddModal.showModal();
+        });
+        
+        closeAddModalBtn.addEventListener('click', () => {
+            globalAddModal.close();
+        });
+        
+        globalAddModal.addEventListener('click', (e) => {
+            if (e.target === globalAddModal) {
+                globalAddModal.close();
+            }
+        });
+        
+        modalTabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modalTabBtns.forEach(b => b.classList.remove('active'));
+                modalTabContents.forEach(c => c.classList.add('hidden'));
+                
+                btn.classList.add('active');
+                const targetTabId = `add-tab-${btn.dataset.addTab.replace('add-', '')}`;
+                document.getElementById(targetTabId).classList.remove('hidden');
+                
+                // If switching to RSS tab, load feeds if not already loaded
+                if (btn.dataset.addTab === 'add-rss') {
+                    loadRssFeeds();
+                }
+            });
+        });
+    }
 
     // --- Bookshelf Logic ---
     if (bookFileInput) {
@@ -1038,6 +1067,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.ok) {
                 showMessage(data.message, 'success');
                 urlsInput.value = ''; // clear form
+                if (globalAddModal) globalAddModal.close();
                 previousQueueCount = data.queued; // Seed count so fast jobs still trigger the toast
                 startQueuePolling();
                 // Refresh tags slightly later in case it's a new tag
@@ -1199,6 +1229,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 rssTagInput.value = '';
                 rssKeywordsInput.value = '';
                 showToast('RSS feed added successfully');
+                if (globalAddModal) globalAddModal.close();
                 loadRssFeeds();
             } else {
                 const data = await res.json();
