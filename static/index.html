@@ -47,8 +47,9 @@
 
         <!-- Sidebar Navigation -->
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2><svg width="22" height="22" viewBox="0 0 100 100" style="vertical-align: middle; margin-right: 6px;"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" rx="3"/><path d="M35 35h30M35 47h30M35 59h20" stroke="var(--accent-color)" stroke-width="4" stroke-linecap="round"/></svg>LocalScrape <span class="version">v3.1.0</span></h2>
+            <div class="splash-brand">
+                <svg width="40" height="40" viewBox="0 0 100 100"><rect width="100" height="100" rx="20" fill="var(--accent-color)" opacity="0.15"/><path d="M25 20h50v60H25z" fill="none" stroke="var(--accent-color)" stroke-width="6" stroke-linejoin="round"/><path d="M40 40h20M40 60h20" stroke="var(--accent-color)" stroke-width="6" stroke-linecap="round"/></svg>
+                <h1>LocalScrape <span class="splash-version">v3.3.0</span></h1>
             </div>
             <div class="sidebar-content">
                 <div class="sidebar-menu" style="margin-bottom: 0.75rem;">
@@ -114,7 +115,12 @@
                         <p>Select a collection to browse your saved articles. <span style="font-size: 0.85em; color: var(--text-muted);">(Sorted newest first)</span></p>
                         <input type="search" id="library-search" class="search-bar" placeholder="Search collections...">
                     </div>
-                    <div id="library-tiles" class="library-tiles-grid">
+                    <div class="view-controls-bar">
+                        <button class="view-toggle-btn active" data-view="tiles" title="Tiles View">⊞ Tiles</button>
+                        <button class="view-toggle-btn" data-view="details" title="Details View">☰ Details</button>
+                        <button class="view-toggle-btn" data-view="list" title="List View">≣ List</button>
+                    </div>
+                    <div id="library-tiles" class="library-tiles-grid layout-tiles">
                         <!-- Tag tiles populated by JS -->
                     </div>
                 </section>
@@ -228,7 +234,12 @@
                         <p>Manage and read your PDF and EPUB files natively.</p>
                     </div>
                     <div class="card-body">
-                        <div id="books-grid" class="books-grid" style="margin-top: 2rem;">
+                        <div class="view-controls-bar" style="margin-top: 1rem;">
+                            <button class="view-toggle-btn active" data-view="tiles" title="Tiles View">⊞ Tiles</button>
+                            <button class="view-toggle-btn" data-view="details" title="Details View">☰ Details</button>
+                            <button class="view-toggle-btn" data-view="list" title="List View">≣ List</button>
+                        </div>
+                        <div id="books-grid" class="books-grid layout-tiles" style="margin-top: 1.5rem;">
                             <!-- Books injected via JS -->
                         </div>
                     </div>
@@ -262,182 +273,73 @@
                         <!-- Help & Docs Tab -->
                         <div id="tab-help-docs" class="tab-content">
                             <h3>How to use LocalScrape</h3>
-                            <p><strong>1. Add Content (Global Modal):</strong> Click the "➕ Add Content" button in the header. From here, you can easily queue up multiple Article URLs, set up automated RSS Feeds, or securely bulk-upload EPUB/PDF books into your Bookshelf!</p>
-                            <div style="padding:0.75rem 1rem; margin:0.75rem 0; background:var(--bg-main); border-left:3px solid var(--accent-color); border-radius:4px; font-size:0.9em; color:var(--text-muted);">
-                                <strong>💡 Smart Auto-Tagging:</strong> If you leave the Tag input blank when pasting URLs, LocalScrape will automatically scan the article's keywords or title to create a relevant folder name (or default to 'uncategorized').
-                            </div>
+                            <p><strong>1. Global Ingestion Modal:</strong> Click the "➕ Add Content" button in the header. From here, you can seamlessly queue up Article URLs, configure RSS Feeds, or securely bulk-upload EPUB/PDF books into your Bookshelf.</p>
                             
-                            <h4 style="margin-top:1.25rem;">📡 RSS Feeds & Settings Dashboard</h4>
-                            <p>Manage background automation and system preferences seamlessly using the <strong>⚙️ Settings</strong> dashboard in the sidebar:</p>
+                            <h4 style="margin-top:1.25rem;">📡 Settings Dashboard</h4>
+                            <p>Manage system preferences via the <strong>⚙️ Settings</strong> dashboard:</p>
                             <ul style="padding-left:1.5rem; line-height:1.8;">
-                                <li><strong>RSS Feeds:</strong> Add feeds via the Global Ingestion Modal. The system will poll automatically based on your <em>RSS Polling Interval</em> setting.</li>
-                                <li><strong>Retention Policy:</strong> The Settings dashboard allows you to define strict retention spans (in days) for older RSS articles and system log histories to prevent storage bloat.</li>
-                                <li><strong>UI & TTS Defaults:</strong> Customize your reading experience globally. Select a default theme, typography, font size, and native Text-to-Speech (TTS) voice and speed preferences.</li>
-                                <li><strong>Global Cookies:</strong> Inject your Netscape-formatted <code>cookies.txt</code> safely into the Scraping Engine directly from the UI to bypass soft paywalls.</li>
+                                <li><strong>RSS Polling & Retention:</strong> Adjust how often the system checks your feeds, and set auto-deletion policies for older articles to save disk space.</li>
+                                <li><strong>UI & TTS Defaults:</strong> Customize your reading experience. Select default themes, fonts, and native Text-to-Speech voices.</li>
+                                <li><strong>Global Cookies:</strong> Inject your <code>cookies.txt</code> to safely bypass soft paywalls.</li>
                             </ul>
                             
-                            <p style="margin-top:1.25rem;"><strong>3. Multi-Select Batch Actions Panel & Megathreads:</strong></p>
-                            <p>Inside any Tag or Library view, you can check the box next to multiple articles to spawn a floating Action Panel. From there, you can mark them all as Read/Unread, Delete them simultaneously, or click <strong>🧵 Megathread</strong> to stitch them together into a single, continuous reading digest.</p>
+                            <p style="margin-top:1.25rem;"><strong>3. Multi-Select Batch Actions:</strong></p>
+                            <p>Check the box next to multiple articles in any grid to spawn a floating Action Panel. You can mark them as Read/Unread, Delete them simultaneously, or click <strong>🧵 Megathread</strong> to stitch them together into a single reading digest.</p>
                             
-                            <p style="margin-top:1.25rem;"><strong>4. Reader Power-Ups:</strong></p>
-                            <ul style="padding-left:1.5rem; line-height:1.8;">
-                            <p style="margin-top:1.25rem;"><strong>5. Activity Monitor & Data Analysis:</strong> Track background queue statuses, job failures (up to 3 retries), and log outputs via the Activity Monitor. Review library footprints, read ratios, and total reading time aggregations dynamically overlaid across the dashboard tiles in the "Data Analysis" tab.</p>
+                            <p style="margin-top:1.25rem;"><strong>4. Bookshelf & Categories:</strong></p>
+                            <p>The Bookshelf natively renders your PDFs and perfectly converts EPUBs into clean Markdown. It seamlessly tracks your scroll progress and automatically organizes your library into distinct Category sections based on the tags you set during upload.</p>
+                            
+                            <p style="margin-top:1.25rem;"><strong>5. Explorer View Toggles:</strong></p>
+                            <p>Organize your library layouts using the view controls above the main grids. Switch between Tiles (large icons), Details (clean tabular rows), or List (compact rows) to match your workflow.</p>
                         </div>
                         
                         <!-- Changelog Tab -->
                         <div id="tab-changelog" class="tab-content hidden">
-                            <h3>Changelog</h3>
-                            <h4>v2.2.0</h4>
+                            <h3>Changelog (Major Milestones)</h3>
+                            <h4>v3.3.0 (Current)</h4>
                             <ul>
-                                <li><strong>Resume Reading Tracker:</strong> Added a persistent progress tracker that remembers your scroll position within an article and prompts you to seamlessly resume where you left off when reopening it.</li>
+                                <li><strong>Explorer View Controls:</strong> Switch between Tiles, Details, and List layouts for all grids.</li>
+                                <li><strong>Documentation Overhaul:</strong> Completely rewrote the Info Guide to reflect modern features.</li>
                             </ul>
-                            <h4>v2.1.5</h4>
+                            <h4>v3.2.0</h4>
                             <ul>
-                                <li><strong>iOS App Icon Update:</strong> Generated new dark-background application icons to prevent iOS from automatically rendering transparent PNG assets with an ugly white background on the home screen.</li>
+                                <li><strong>Bookshelf Categories:</strong> Native category tagging, Book Management APIs (Edit/Trash), and Reader View PDF routing fixes.</li>
                             </ul>
-                            <h4>v2.1.4</h4>
+                            <h4>v3.1.0</h4>
                             <ul>
-                                <li><strong>Activity Monitor Update:</strong> Added "Clear All" buttons to both the Failed Jobs and Completed Jobs sections, allowing users to wipe history logs on demand.</li>
+                                <li><strong>Global Add Content Modal:</strong> Consolidated content ingestion into a single modal. Strict Widescreen Layout Fixes applied.</li>
                             </ul>
-                            <h4>v2.1.3</h4>
+                            <h4>v3.0.0</h4>
                             <ul>
-                                <li><strong>Reading Time Calculation Fix:</strong> Fixed a regex parsing bug on the backend where quoted reading times in markdown frontmatter caused the total reading time calculations on the library dashboard to incorrectly display as 0 minutes.</li>
-                            </ul>
-                            <h4>v2.1.2</h4>
-                            <ul>
-                                <li><strong>Reader Navigation Fix:</strong> Pressing "Back" or deleting an article from within the Reader View now correctly returns you to the current tag's folder view instead of dropping you all the way back to the main library grid.</li>
-                            </ul>
-                            <h4>v2.1.1</h4>
-                            <ul>
-                                <li><strong>Reader Navigation:</strong> Added a "Next Article" button directly to the main Reader view header.</li>
-                                <li><strong>Widescreen Layout:</strong> Eliminated the horizontal scrollbar issue on the Info tabs and enforced a full-width layout for the main content wrappers.</li>
-                                <li><strong>AI Cleanup:</strong> Removed all legacy UI and backend references to the Gemini AI integration.</li>
-                            </ul>
-                            <h4>v2.1.0</h4>
-                            <ul>
-                                <li><strong>Settings Dashboard:</strong> Added a dedicated Settings UI to manage RSS polling, retentions, UI defaults, TTS preferences, and Global Cookies in the browser without editing JSON files.</li>
-                                <li><strong>Dynamic Configuration:</strong> Backend jobs (APScheduler) now dynamically read retentions and intervals from configuration, automatically rescheduling without restarting the container.</li>
+                                <li><strong>Bookshelf Engine:</strong> Native EPUB/PDF support via ebooklib and a persistent Global "Resume Reading" Tracker.</li>
                             </ul>
                             <h4>v2.0.0</h4>
                             <ul>
-                                <li><strong>Mobile PWA Enhancements:</strong> Added Web Share Target API to accept URLs directly from mobile browser share sheets, and swipe gestures to navigate between articles or return to the library.</li>
-                                <li><strong>Reading Power-Ups:</strong> Introduced a Read/Unread state tracker that highlights unread articles, Bionic Reading Mode for improved focus, and a customizable Teleprompter auto-scroll.</li>
-                                <li><strong>Bulk Data Utilities:</strong> Added a multi-select batch actions floating panel to mark items read/unread, delete them, or seamlessly compile them into a new Megathread digest.</li>
-                                <li><strong>Library Data Analysis:</strong> A new interactive info tab detailing storage footprints, read ratios, and estimated total reading time aggregations dynamically overlaid across the dashboard tiles.</li>
-                                <li><strong>Canonical Duplication Safeguard:</strong> Backend instantly filters duplicate URLs against historical completion logs to drastically improve queue efficiency.</li>
+                                <li><strong>Major Features:</strong> Dedicated Settings Dashboard, Multi-Select Batch Actions, Megathreads, PWA Mobile enhancements, and Reading Power-Ups (Bionic/Teleprompter).</li>
                             </ul>
-                            <h4>v1.7.2</h4>
+                            <h4>v1.0.0</h4>
                             <ul>
-                                <li><strong>Sidebar Navigation Fix:</strong> Clicking a tag in the sidebar now also seamlessly opens the same full collection view in the main window as clicking it from the Dashboard grid.</li>
-                            </ul>
-                            <h4>v1.7.1</h4>
-                            <ul>
-                                <li><strong>Next Article Flow:</strong> Replaced the Auto-Scroll button with a "Next Article" button that instantly loads the next article in your current folder for seamless reading.</li>
-                                <li><strong>Zen Mode Fix:</strong> Ensured the floating action buttons are visible when Zen Mode is activated.</li>
-                            </ul>
-                            <h4>v1.7.0</h4>
-                            <ul>
-                                <li><strong>Text-to-Speech Speed Control:</strong> Added a speed adjustment slider next to the TTS Listen button.</li>
-                                <li><strong>Zen Mode Controls:</strong> Added a floating action menu during Focus Mode with a "Close" button to exit and an "Auto-Scroll" button.</li>
-                                <li><strong>Documentation Overhaul:</strong> Fully updated the in-app Help & Docs.</li>
-                            </ul>
-                            <h4>v1.6.5</h4>
-                            <ul>
-                                <li><strong>Bug Fixes:</strong> Patched a critical UI initialization crash, fixed the Favorites dashboard tile rendering, and resolved a persistent background CPU pegging issue.</li>
-                            </ul>
-                            <h4>v1.6.0</h4>
-                            <ul>
-                                <li><strong>Activity Monitor:</strong> Consolidated the Failed Jobs and Logs views into a single dashboard.</li>
-                                <li><strong>Job History:</strong> Added tracking for successfully completed scrape jobs.</li>
-                                <li><strong>10-Day Retention:</strong> Implemented a background automated cleanup task to prune log files and job histories older than 10 days to save space.</li>
-                            </ul>
-                            <h4>v1.5.0</h4>
-                            <ul>
-                                <li><strong>PWA Support:</strong> Install LocalScrape to your home screen with offline manifest support.</li>
-                                <li><strong>Zen Mode:</strong> Distraction-free reading with the '👓 Focus' toggle.</li>
-                                <li><strong>Text-to-Speech:</strong> Listen to articles using the '🎧 Listen' button via the Web Speech API.</li>
-                                <li><strong>Favorites:</strong> Star articles to collect them in a virtual 'Favorites' folder.</li>
-                                <li><strong>Smart Auto-Tagging:</strong> Blank tags fallback to automatically parsing keywords or 'uncategorized'.</li>
-                                <li><strong>One-Click Backup:</strong> Zip and download your entire library directly from the sidebar.</li>
-                                <li><strong>Print-to-PDF:</strong> Clean print formatting optimized for readability and paper saving.</li>
-                                <li><strong>Safari Optimizations:</strong> Eliminated bounce scrolling and improved mobile viewport layout.</li>
-                                <li><strong>Storage Warnings:</strong> The storage badge alerts you when the library exceeds 500MB.</li>
-                                <li><strong>Terminal Theme:</strong> Added a third "Hacker" theme to the switcher.</li>
-                                <li><strong>Instant Search:</strong> Find tags and articles quickly using the new search bars in the library views.</li>
-                                <li><strong>Reading Progress Bar:</strong> A fixed progress indicator appears when reading long articles.</li>
-                                <li><strong>Download Button:</strong> Export articles directly to your local machine as <code>.md</code> files.</li>
-                                <li><strong>Article Dates:</strong> Articles now display their added dates and sort by newest first across all views.</li>
-                            </ul>
-                            <h4>v1.4.0</h4>
-                            <ul>
-                                <li><strong>Library Tile Layout:</strong> The default home screen is now a CSS Grid of large, clickable Tag Tiles showing folder icons and article counts. Click a tile to browse its articles in a clean full-width list.</li>
-                                <li><strong>Sidebar Restructure:</strong> "Dashboard" renamed to "Add Articles/Links" and moved under a <code>MANAGEMENT</code> section. A new <strong>📚 Library</strong> button is the primary navigation item.</li>
-                                <li><strong>Session Splash Screen:</strong> The splash/start page now uses <code>sessionStorage</code> and only appears once per browser session. Page refreshes skip it entirely.</li>
-                                <li><strong>Inactivity Lock:</strong> After 10 minutes of no interaction (mouse, keyboard, scroll), the splash screen fades back in to hide app contents. Click "Let's Go!" to resume.</li>
-                                <li><strong>Branding:</strong> New inline SVG brand icon in the sidebar header and a custom document/search favicon replacing the default browser icon.</li>
-                            </ul>
-                            <h4>v1.3.3</h4>
-                            <ul>
-                                <li><strong>Automated Maintenance:</strong> Added a background cleanup job that automatically deletes RSS articles older than 5 days.</li>
-                            </ul>
-                            <h4>v1.3.2</h4>
-                            <ul>
-                                <li><strong>UI Enhancement:</strong> The left-hand sidebar is now draggable/resizable so you can read long article headings. Width is saved across sessions.</li>
-                                <li><strong>Bug Fix:</strong> Fixed a <code>NameError</code> crash in the system stats endpoint that was causing the storage badge to display <code>--</code>.</li>
-                            </ul>
-                            <h4>v1.3.1</h4>
-                            <ul>
-                                <li><strong>Splash Screen:</strong> Added a branded start page with animated neon glow effects and a "Let's Go!" entry button.</li>
-                            </ul>
-                            <h4>v1.3.0</h4>
-                            <ul>
-                                <li><strong>Fetch Now:</strong> Manually trigger an RSS feed pull instead of waiting for the 2-hour cycle.</li>
-                                <li><strong>Delete After Reading:</strong> A "Delete this article" prompt appears when you scroll to the bottom of the reader.</li>
-                                <li><strong>Storage Counter:</strong> Live 💾 indicator in the header showing total library disk usage.</li>
-                                <li><strong>Failed Jobs UI:</strong> Fully interactive view to review, retry, or dismiss failed scrapes.</li>
-                                <li><strong>Improved RSS Docs:</strong> Step-by-step instructions and keyword guidance in the Help tab.</li>
-                            </ul>
-                            <h4>v1.2.0 (Beta Polish)</h4>
-                            <ul>
-                                <li><strong>RSS Feeds:</strong> Automated polling every 2 hours with keyword matching.</li>
-                                <li><strong>Failed Jobs Vault:</strong> Review rejected URLs and retry them (3-strike logic).</li>
-                                <li><strong>Full-Text Search API:</strong> Search your entire local library via <code>/api/search</code>.</li>
-                                <li><strong>Cookie Injector:</strong> Save domain cookies for paywall bypassing.</li>
-                                <li><strong>UI Overhaul:</strong> New tabbed info page, empty states, and toast notifications.</li>
-                            </ul>
-                            <h4>v1.1.0</h4>
-                            <ul>
-                                <li><strong>Playwright Fallback:</strong> Headless Chromium integration for JS-heavy sites.</li>
-                                <li><strong>Referer Spoofing:</strong> Bypass soft paywalls pretending to be Google/Twitter.</li>
-                                <li><strong>Metrics:</strong> YAML front-matter with reading time and word count.</li>
+                                <li><strong>Initial Release:</strong> Core web scraping pipeline, Markdown conversion, and a flat-file zero-database architecture.</li>
                             </ul>
                         </div>
                         
                         <!-- Architecture Tab -->
                         <div id="tab-architecture" class="tab-content hidden">
                             <h3>Architecture</h3>
-                            <p><strong>Frontend:</strong> A purely framework-free Single Page Application built with Vanilla HTML, CSS, and JS. It uses <code>marked.js</code> for rendering Markdown and features a Progressive Web App (PWA) manifest that natively supports the Web Share Target API on mobile devices.</p>
-                            <p><strong>Backend API:</strong> Built with Python and <code>FastAPI</code>. It provides RESTful endpoints for queuing scrapes, checking status, executing bulk Megathread digests, and managing files (CRUD operations on the downloads directory).</p>
-                            <p><strong>Scraping Pipeline (4-Stage Core):</strong>
-                                <br>1. Check cached version on <code>archive.md</code>.
-                                <br>2. Fallback to Accelerated Mobile Pages (AMP) via <code>?amp</code>.
-                                <br>3. Fallback to direct fetch with spoofed Referer headers.
-                                <br>4. Final fallback: Playwright headless Chromium (images/fonts blocked for speed).
-                            </p>
+                            <p><strong>Frontend:</strong> A purely framework-free Single Page Application built with Vanilla HTML, CSS, and JS. It uses <code>marked.js</code> for rendering Markdown and features a Progressive Web App (PWA) manifest.</p>
+                            <p><strong>Backend API:</strong> Built with Python and <code>FastAPI</code>. It provides RESTful endpoints for queuing scrapes, bulk operations, and file management.</p>
+                            <p><strong>Data Philosophy:</strong> Strict "no database" rule. All data lives in the local filesystem inside the <code>downloads/</code> folder.</p>
                         </div>
                         
                         <!-- Data Flows & API Tab -->
                         <div id="tab-data-flows" class="tab-content hidden">
                             <h3>Data Flows</h3>
-                            <p><strong>Queue System:</strong> An <code>asyncio.Queue</code> manages background jobs sequentially to avoid rate-limiting. Status is tracked via the <code>/api/queue</code> endpoint.</p>
-                            <p><strong>Persistence:</strong> The app enforces a strict "no database" rule. All data lives in the local filesystem inside the <code>downloads/</code> folder:</p>
+                            <p>All data is maintained locally as flat files:</p>
                             <ul>
                                 <li><code>tags/</code>: Folders containing <code>.md</code> markdown articles.</li>
+                                <li><code>books/</code>: Folders containing <code>.pdf</code>, <code>.epub</code>, and their `.meta.json` companions.</li>
                                 <li><code>feeds.json</code>: RSS feed configurations.</li>
-                                <li><code>failed.json</code>: Vault of failed scrape attempts (max 3 strikes).</li>
-                                <li><code>completed.json</code>: Ledger of historical scrapes to block exact-match URL duplication.</li>
-                                <li><code>read_state.json</code>: Dictionary tracking boolean read/unread statuses.</li>
-                                <li><code>settings.json</code>: Local configuration overrides (e.g., Gemini API keys).</li>
+                                <li><code>settings.json</code>: Local configuration overrides.</li>
                                 <li><code>favorites.json</code>: Contains all Starred article paths.</li>
                             </ul>
                         </div>
@@ -446,7 +348,6 @@
                         <div id="tab-constraints" class="tab-content hidden">
                             <h3>Constraints & Limitations</h3>
                             <ul>
-                                <li><strong>Full-Text Search:</strong> Performed via linear filesystem scanning. Not suitable for corpuses >10,000 articles (requires migrating to a TF-IDF index).</li>
                                 <li><strong>Storage:</strong> Images are not downloaded locally; articles rely on hot-linking to original image URLs.</li>
                                 <li><strong>Browser:</strong> The bundled Playwright Chromium instance adds ~400MB to the Docker container size.</li>
                             </ul>

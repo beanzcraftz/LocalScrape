@@ -163,6 +163,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const batchMegathreadBtn = document.getElementById('batch-megathread-btn');
     const batchDeleteBtn = document.getElementById('batch-delete-btn');
     const batchCancelBtn = document.getElementById('batch-cancel-btn');
+
+    // --- View Layout Toggles ---
+    const viewToggleBtns = document.querySelectorAll('.view-toggle-btn');
+    const libraryTiles = document.getElementById('library-tiles');
+    const booksGrid = document.getElementById('books-grid');
+    
+    let currentLayout = localStorage.getItem('localscrape_preferred_view') || 'layout-tiles';
+    
+    function applyViewLayout(layoutName) {
+        currentLayout = layoutName;
+        localStorage.setItem('localscrape_preferred_view', layoutName);
+        
+        viewToggleBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === layoutName.replace('layout-', ''));
+        });
+        
+        if (libraryTiles) {
+            libraryTiles.classList.remove('layout-tiles', 'layout-details', 'layout-list');
+            libraryTiles.classList.add(layoutName);
+        }
+        
+        if (booksGrid) {
+            booksGrid.classList.remove('layout-tiles', 'layout-details', 'layout-list');
+            booksGrid.classList.add(layoutName);
+            
+            const catGrids = booksGrid.querySelectorAll('.books-category-grid');
+            catGrids.forEach(g => {
+                g.classList.remove('layout-tiles', 'layout-details', 'layout-list');
+                g.classList.add(layoutName);
+            });
+        }
+    }
+    
+    viewToggleBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            applyViewLayout(`layout-${btn.dataset.view}`);
+        });
+    });
     
     const bookFileInput = document.getElementById('book-file-input');
     const bookUploadProgress = document.getElementById('book-upload-progress');
@@ -629,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 booksGrid.appendChild(header);
                 
                 const grid = document.createElement('div');
-                grid.className = 'books-category-grid';
+                grid.className = `books-category-grid ${currentLayout}`;
                 grid.style.display = 'grid';
                 grid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(220px, 1fr))';
                 grid.style.gap = '1.5rem';
@@ -1385,8 +1423,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function startQueuePolling() {
         if (!pollInterval) {
             checkQueue(); // check immediately
-            pollInterval = setInterval(checkQueue, 3000); // then every 3s
-        }
+            // Initialization
+    setInterval(updateStorageBadge, 120000); // Check storage every 2 min
+    applyViewLayout(currentLayout);
+    loadSettings();    }
     }
 
     function stopQueuePolling() {
